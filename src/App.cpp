@@ -4,16 +4,21 @@
 #include "Util/Input.hpp"
 #include "Util/Keycode.hpp"
 #include "Util/Logger.hpp"
+#include "Util/Time.hpp"
 
 void App::Start() {
     LOG_TRACE("Start");
+    
+    m_CurrentScene = std::make_unique<GameplayScene>();
+
     m_CurrentState = State::UPDATE;
 }
 
 void App::Update() {
-    
-    //TODO: do your things here and delete this line <3
-    
+    const float dt = Util::Time::GetDeltaTimeMs() / 1000.0f;
+
+    m_CurrentScene->update(dt);
+
     /*
      * Do not touch the code below as they serve the purpose for
      * closing the window.

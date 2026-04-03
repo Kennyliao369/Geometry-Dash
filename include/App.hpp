@@ -3,12 +3,19 @@
 
 #include "pch.hpp" // IWYU pragma: export
 
+#include "Util/Renderer.hpp"
+#include "Util/GameObject.hpp"
+
+#include "Scene/Scene.hpp"
+#include "Scene/MainMenuScene.hpp"
+#include "Scene/GameplayScene.hpp"
+
 class App {
 public:
     enum class State {
         START,
         UPDATE,
-        END,
+        END
     };
 
     State GetCurrentState() const { return m_CurrentState; }
@@ -20,10 +27,10 @@ public:
     void End(); // NOLINT(readability-convert-member-functions-to-static)
 
 private:
-    void ValidTask();
-
-private:
     State m_CurrentState = State::START;
+
+    std::unique_ptr<Scene> m_CurrentScene;
+
 };
 
 #endif
