@@ -44,7 +44,7 @@ void WorldRender::focus(const std::shared_ptr<WorldObject> target) {
     m_FocusTarget = target;
 }
 
-void WorldRender::updataFocusPosition() {
+void WorldRender::updateFocusPosition() {
     if (auto target = m_FocusTarget.lock()) {
         m_FocusPosition = target->getPosition();
     }
@@ -108,7 +108,7 @@ void WorldRender::updateCellSize() {
 }
 
 void WorldRender::update() {
-    updataFocusPosition();
+    updateFocusPosition();
 
     auto compareFunction = [](const StackInfo &a, const StackInfo &b) {
         return a.m_WorldObject->GetZIndex() > b.m_WorldObject->GetZIndex();

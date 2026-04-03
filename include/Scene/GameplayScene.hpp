@@ -28,11 +28,13 @@ public:
     void update(const float dt) override;
 
 private:
-    void updateVisibleRange();
     void updatePlayerPhysics(float dt);
+    
     void resolveSolidCollisions();
     void checkHazardCollisions();
     void checkTriggerOverlaps();
+
+    void updateVisibleRange();
     void renderWorld();
 
 private:
@@ -44,7 +46,7 @@ private:
     std::shared_ptr<Character> m_Player;
     std::vector<std::shared_ptr<World::WorldObject>> m_AllObjects;
 
-    glm::uvec2 m_VisibleRange = {0.0f, 0.0f};
+    glm::vec2 m_VisibleRange = {0.0f, 0.0f};
     glm::vec2 m_VisiblePadding = {0.0f, 0.0f};
     
     

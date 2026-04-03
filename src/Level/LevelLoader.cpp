@@ -1,7 +1,6 @@
 #include "Util/LoadTextFile.hpp"
 
 #include "Level/LevelLoader.hpp"
-#include "World/ObjectType.hpp"
 #include "World/WorldObject.hpp"
 
 #include "World/TriggerObject.hpp"

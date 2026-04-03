@@ -12,7 +12,7 @@ class SolidObject : public World::WorldObject {
 public:
     SolidObject(SolidType solidType) 
         :   World::WorldObject(ObjectType::SOLID),
-            solidType(solidType) {
+            m_SolidType(solidType) {
         
 
     }
@@ -20,7 +20,7 @@ public:
     virtual ~SolidObject() = default;
 
 private:
-    SolidType solidType;
+    SolidType m_SolidType;
 
 };
 

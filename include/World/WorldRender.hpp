@@ -49,7 +49,7 @@ private:
         Util::Transform m_ParentTransform;
     };
 
-    void updataFocusPosition();
+    void updateFocusPosition();
     void projectObjectToScreen(StackInfo& worldObject);
     void updateCellSize();
 

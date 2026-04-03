@@ -7,7 +7,6 @@
 
 #include <glm/vec2.hpp>
 
-#include "World/ObjectType.hpp"
 #include "World/WorldObject.hpp"
 
 struct MetaData {

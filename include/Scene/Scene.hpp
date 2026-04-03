@@ -6,15 +6,19 @@
 class Scene {
 public:
     Scene(SceneType type)
-        : type(type) {
+        : m_Type(type) {
     };
 
     virtual ~Scene() = default;
 
+    SceneType getType() const {
+        return m_Type;
+    }
+
     virtual void update(const float dt) = 0;
 
 private:
-    SceneType type = SceneType::None;
+    SceneType m_Type = SceneType::None;
 
 };
 

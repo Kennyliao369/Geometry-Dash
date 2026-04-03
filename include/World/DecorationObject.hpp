@@ -11,7 +11,7 @@ class DecorationObject : public World::WorldObject {
 public:
     DecorationObject(DecorationType decorationType) 
         :   World::WorldObject(ObjectType::DECORATION),
-            decorationType(decorationType) {
+            m_DecorationType(decorationType) {
         
     }
 
@@ -19,7 +19,7 @@ public:
     virtual ~DecorationObject() = default;
 
 private:
-    DecorationType decorationType;
+    DecorationType m_DecorationType;
 
 };
 

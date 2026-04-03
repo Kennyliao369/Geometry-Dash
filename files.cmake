@@ -4,7 +4,7 @@ set(INCLUDE_FILES
     World/Character.hpp
     World/WorldRender.hpp
     World/WorldObject.hpp
-    World/ObjectType.hpp
+
     World/HazardObject.hpp
     World/DecorationObject.hpp
     World/SolidObject.hpp

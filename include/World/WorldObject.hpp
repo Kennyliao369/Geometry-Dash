@@ -6,9 +6,17 @@
 #include "Util/Transform.hpp"
 #include "Util/Image.hpp"
 
-#include "World/ObjectType.hpp"
-
 #include "pch.hpp" // IWYU pragma: export
+
+enum class ObjectType {
+    CHARACTER,
+    SOLID,
+    HAZARD,
+    TRIGGER,
+    DECORATION,
+    UNKNOWN
+};
+
 
 namespace World {
 

@@ -26,19 +26,33 @@ void GameplayScene::update(const float dt) {
     // m_Objects.insert(m_Objects.end(), spawnedObjects.begin(), spawnedObjects.end());
     // spawnObjects();
     
-    
+    m_Player->setOnGround(true);
     m_Player->update(dt);
-    /*
-    updatePlayerPhysics(dt);
+    
+    // updatePlayerPhysics(dt);
     resolveSolidCollisions();
     checkHazardCollisions();
     checkTriggerOverlaps();
-    */
+    
     updateVisibleRange();
 
     renderWorld();
     // m_UiRoot.Update();
 }
+
+
+void GameplayScene::resolveSolidCollisions() {
+
+}
+
+void GameplayScene::checkHazardCollisions() {
+
+}
+
+void GameplayScene::checkTriggerOverlaps() {
+    
+}
+
 
 void GameplayScene::updateVisibleRange() {
     const float focusX = m_WorldRoot.getFocusPosition().x;

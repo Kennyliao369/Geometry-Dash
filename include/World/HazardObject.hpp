@@ -12,14 +12,14 @@ class HazardObject : public World::WorldObject {
 public:
     HazardObject(HazardType hazardType) 
         :   World::WorldObject(ObjectType::HAZARD),
-            hazardType(hazardType) {
+            m_HazardType(hazardType) {
         
     }
 
     virtual ~HazardObject() = default;
 
 private:
-    HazardType hazardType;
+    HazardType m_HazardType;
 
 };
 

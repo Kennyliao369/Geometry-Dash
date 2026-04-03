@@ -13,7 +13,7 @@ class TriggerObject : public World::WorldObject {
 public:
     TriggerObject(TriggerType triggerType) 
         :   World::WorldObject(ObjectType::TRIGGER),
-            triggerType(triggerType) {
+            m_TriggerType(triggerType) {
         
 
     }
@@ -21,7 +21,7 @@ public:
     virtual ~TriggerObject() = default;
 
 private:
-    TriggerType triggerType;
+    TriggerType m_TriggerType;
 
 };
 
