@@ -1,0 +1,33 @@
+{
+  "meta": {
+    "playerSpawn": {
+      "x": 2.0,
+      "y": 3.0
+    }
+  },
+  "objects": [
+    { "type": "block", "position": { "x": 0.0, "y": 0.0 }, "size": { "x": 1.0, "y": 1.0 }, "material": "block_grid_03", "rotation": 0.0 },
+    { "type": "block", "position": { "x": 1.0, "y": 0.0 }, "size": { "x": 1.0, "y": 1.0 }, "material": "block_grid_05", "rotation": 0.0 },
+    { "type": "block", "position": { "x": 2.0, "y": 0.0 }, "size": { "x": 1.0, "y": 1.0 }, "material": "block_grid_05", "rotation": 0.0 },
+    { "type": "block", "position": { "x": 3.0, "y": 0.0 }, "size": { "x": 1.0, "y": 1.0 }, "material": "block_grid_05", "rotation": 0.0 },
+    { "type": "block", "position": { "x": 4.0, "y": 0.0 }, "size": { "x": 1.0, "y": 1.0 }, "material": "block_grid_05", "rotation": 0.0 },
+    { "type": "block", "position": { "x": 5.0, "y": 0.0 }, "size": { "x": 1.0, "y": 1.0 }, "material": "block_grid_05", "rotation": 0.0 },
+    { "type": "block", "position": { "x": 6.0, "y": 0.0 }, "size": { "x": 1.0, "y": 1.0 }, "material": "block_grid_05", "rotation": 0.0 },
+    { "type": "block", "position": { "x": 7.0, "y": 0.0 }, "size": { "x": 1.0, "y": 1.0 }, "material": "block_grid_05", "rotation": 0.0 },
+    { "type": "block", "position": { "x": 8.0, "y": 0.0 }, "size": { "x": 1.0, "y": 1.0 }, "material": "block_grid_05", "rotation": 0.0 },
+    { "type": "block", "position": { "x": 9.0, "y": 0.0 }, "size": { "x": 1.0, "y": 1.0 }, "material": "block_grid_05", "rotation": 0.0 },
+
+    { "type": "block", "position": { "x": 14.0, "y": 0.0 }, "size": { "x": 1.0, "y": 1.0 }, "material": "block_fill", "rotation": 0.0 },
+    { "type": "block", "position": { "x": 18.0, "y": 0.0 }, "size": { "x": 1.0, "y": 1.0 }, "material": "block_fill", "rotation": 0.0 },
+
+    { "type": "block", "position": { "x": 18.0, "y": -10.0 }, "size": { "x": 1.0, "y": 1.0 }, "material": "block_fill", "rotation": 0.0 },
+    { "type": "block", "position": { "x": 19.0, "y": -10.0 }, "size": { "x": 1.0, "y": 1.0 }, "material": "block_fill", "rotation": 0.0 },
+    { "type": "block", "position": { "x": 20.0, "y": -10.0 }, "size": { "x": 1.0, "y": 1.0 }, "material": "block_fill", "rotation": 0.0 },
+    { "type": "block", "position": { "x": 21.0, "y": -10.0 }, "size": { "x": 1.0, "y": 1.0 }, "material": "block_fill", "rotation": 0.0 },
+    { "type": "block", "position": { "x": 22.0, "y": -10.0 }, "size": { "x": 1.0, "y": 1.0 }, "material": "block_fill", "rotation": 0.0 },
+    { "type": "block", "position": { "x": 23.0, "y": -10.0 }, "size": { "x": 1.0, "y": 1.0 }, "material": "block_fill", "rotation": 0.0 },
+    { "type": "block", "position": { "x": 24.0, "y": -10.0 }, "size": { "x": 1.0, "y": 1.0 }, "material": "block_fill", "rotation": 0.0 },
+    { "type": "block", "position": { "x": 25.0, "y": -10.0 }, "size": { "x": 1.0, "y": 1.0 }, "material": "block_fill", "rotation": 0.0 },
+    { "type": "block", "position": { "x": 26.0, "y": -10.0 }, "size": { "x": 1.0, "y": 1.0 }, "material": "block_fill", "rotation": 0.0 }
+  ]
+}

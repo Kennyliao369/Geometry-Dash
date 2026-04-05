@@ -1,8 +1,6 @@
-#include "Util/LoadTextFile.hpp"
-
 #include "Level/LevelLoader.hpp"
-#include "World/WorldObject.hpp"
 
+#include "World/WorldObject.hpp"
 #include "World/TriggerObject.hpp"
 #include "World/HazardObject.hpp"
 #include "World/DecorationObject.hpp"
@@ -10,164 +8,169 @@
 
 #include "Util/Image.hpp"
 
+#include <nlohmann/json.hpp>
+
 #include <algorithm>
-#include <sstream>
+#include <fstream>
 #include <stdexcept>
 #include <string>
-#include <vector>
+
+using json = nlohmann::json;
 
 namespace {
-    enum class Section {
-        NONE,
-        META,
-        OBJECTS
-    };
-
-    std::vector<std::string> splitWhitespace(const std::string& line) {
-        std::istringstream iss(line);
-        std::vector<std::string> tokens;
-        std::string token;
-
-        while (iss >> token) {
-            tokens.push_back(token);
+    json loadJsonFile(const std::string& filePath) {
+        std::ifstream file(filePath);
+        if (!file.is_open()) {
+            throw std::runtime_error("failed to open level file: " + filePath);
         }
-        return tokens;
+
+        return json::parse(file);
     }
 
-    std::string trim(const std::string& text) {
-        const std::size_t begin = text.find_first_not_of(" \t\r\n");
-        if (begin == std::string::npos) {
-            return "";
+    glm::vec2 parseVec2(const json& node, const std::string& key) {
+        if (!node.contains(key) || !node.at(key).is_object()) {
+            throw std::runtime_error("missing object field: " + key);
         }
 
-        const std::size_t end = text.find_last_not_of(" \t\r\n");
-        return text.substr(begin, end - begin + 1);
+        const auto& vec = node.at(key);
+
+        if (!vec.contains("x") || !vec.contains("y")) {
+            throw std::runtime_error("vec2 field requires x and y: " + key);
+        }
+
+        return {
+            vec.at("x").get<float>(),
+            vec.at("y").get<float>()
+        };
     }
 
-    void parseMeta(LevelData& levelData, const std::vector<std::string>& tokens) {
-        if (tokens.size() < 2) {
-            throw std::runtime_error("meta line requires: key value");
+    void readMeta(LevelData& levelData, const json& root) {
+        if (!root.contains("meta") || !root.at("meta").is_object()) {
+            throw std::runtime_error("level json requires object field: meta");
         }
 
-        if (tokens[0] == "player_spawn_x") {
-            levelData.meta.playerSpawn.x = std::stof(tokens[1]);
+        const json& meta = root.at("meta");
+
+        if (!meta.contains("playerSpawn") || !meta.at("playerSpawn").is_object()) {
+            throw std::runtime_error("meta requires object field: playerSpawn");
         }
-        else if (tokens[0] == "player_spawn_y") {
-            levelData.meta.playerSpawn.y = std::stof(tokens[1]);
-        }
+
+        levelData.meta.playerSpawn = parseVec2(meta, "playerSpawn");
     }
 
-
-    void parseObject(LevelData& levelData, const std::vector<std::string>& tokens) {
-        if (tokens.size() < 7) {
-            throw std::runtime_error(
-                "object line requires: type x y width height material value"
-            );
+    std::shared_ptr<World::WorldObject> createObjectFromJson(const json& objectJson) {
+        if (!objectJson.contains("type") || !objectJson.at("type").is_string()) {
+            throw std::runtime_error("object requires string field: type");
         }
+        if (!objectJson.contains("material") || !objectJson.at("material").is_string()) {
+            throw std::runtime_error("object requires string field: material");
+        }
+
+        const std::string type = objectJson.at("type").get<std::string>();
+        const std::string material = objectJson.at("material").get<std::string>();
+        const glm::vec2 position = parseVec2(objectJson, "position");
+        const glm::vec2 size = parseVec2(objectJson, "size");
+        const float rotation = objectJson.value("rotation", 0.0f);
 
         std::shared_ptr<World::WorldObject> object;
-        if (tokens[0] == "block") {
+
+        if (type == "block") {
             object = std::make_shared<SolidObject>(SolidType::BLOCK);
-        } 
-        else if (tokens[0] == "beacon") {
-            object = std::make_shared<DecorationObject>(DecorationType::BEACON);
+            object->setShapeType(ShapeType::BOX);
+            object->SetDrawable(
+                std::make_shared<Util::Image>(RESOURCE_DIR "/Image/Solid/" + material + ".png")
+            );
         }
-        else if (tokens[0] == "ground") {
+        else if (type == "ground") {
             object = std::make_shared<SolidObject>(SolidType::GROUND);
-        } 
-        else if (tokens[0] == "spike") {
+            object->setShapeType(ShapeType::BOX);
+            object->SetDrawable(
+                std::make_shared<Util::Image>(RESOURCE_DIR "/Image/Solid/" + material + ".png")
+            );
+        }
+        else if (type == "spike") {
             object = std::make_shared<HazardObject>(HazardType::SPIKE);
+            object->setShapeType(ShapeType::TRIANGLE);
+            object->SetDrawable(
+                std::make_shared<Util::Image>(RESOURCE_DIR "/Image/Hazard/" + material + ".png")
+            );
         }
-        else if (tokens[0] == "acid") {
+        else if (type == "acid") {
             object = std::make_shared<HazardObject>(HazardType::ACID);
+            object->setShapeType(ShapeType::BOX);
+            object->SetDrawable(
+                std::make_shared<Util::Image>(RESOURCE_DIR "/Image/Hazard/" + material + ".png")
+            );
         }
-        else if (tokens[0] == "portal") {
+        else if (type == "beacon") {
+            object = std::make_shared<DecorationObject>(DecorationType::BEACON);
+            object->setShapeType(ShapeType::UNKNOWN);
+            object->SetDrawable(
+                std::make_shared<Util::Image>(RESOURCE_DIR "/Image/Decoration/" + material + ".png")
+            );
+        }
+        else if (type == "portal") {
             object = std::make_shared<TriggerObject>(TriggerType::PORTAL);
+            object->setShapeType(ShapeType::BOX);
+            object->SetDrawable(
+                std::make_shared<Util::Image>(RESOURCE_DIR "/Image/Trigger/" + material + ".png")
+            );
         }
-        else if (tokens[0] == "pad") {
+        else if (type == "pad") {
             object = std::make_shared<TriggerObject>(TriggerType::PAD);
+            object->setShapeType(ShapeType::BOX);
+            object->SetDrawable(
+                std::make_shared<Util::Image>(RESOURCE_DIR "/Image/Trigger/" + material + ".png")
+            );
         }
-        else if (tokens[0] == "coin") {
+        else if (type == "coin") {
             object = std::make_shared<TriggerObject>(TriggerType::COIN);
+            object->setShapeType(ShapeType::CIRCLE);
+            object->SetDrawable(
+                std::make_shared<Util::Image>(RESOURCE_DIR "/Image/Trigger/" + material + ".png")
+            );
         }
         else {
-            throw std::runtime_error("unknown object type: " + tokens[0]);
+            throw std::runtime_error("unknown object type: " + type);
         }
 
+        object->setPosition(position);
+        object->setSize(size);
+        object->setRotation(rotation);
 
-        object->setPosition({
-            std::stof(tokens[1]),
-            std::stof(tokens[2])
-        });
+        return object;
+    }
 
-        object->setSize({
-            std::stof(tokens[3]),
-            std::stof(tokens[4])
-        });
-
-        object->SetDrawable(std::make_shared<Util::Image>(RESOURCE_DIR"/Image/" + tokens[5] + ".png"));
-
-        // object->value = tokens[6];
-
-        if (object) {
-            levelData.allObjects.push_back(object);
+    void readObjects(LevelData& levelData, const json& root) {
+        if (!root.contains("objects") || !root.at("objects").is_array()) {
+            throw std::runtime_error("level json requires array field: objects");
         }
+
+        for (const auto& objectJson : root.at("objects")) {
+            levelData.allObjects.push_back(createObjectFromJson(objectJson));
+        }
+    }
+
+    void sortObjectsByX(LevelData& levelData) {
+        std::sort(
+            levelData.allObjects.begin(),
+            levelData.allObjects.end(),
+            [](const std::shared_ptr<World::WorldObject>& a,
+               const std::shared_ptr<World::WorldObject>& b) {
+                return a->getPosition().x < b->getPosition().x;
+            }
+        );
     }
 }
 
 LevelData LevelLoader::LoadFromFile(const std::string& filePath) {
     LevelData levelData;
 
-    const std::string content = Util::LoadTextFile(filePath);
-    std::istringstream stream(content);
-    std::string rawLine;
+    const json root = loadJsonFile(filePath);
 
-    Section currentSection = Section::NONE;
-
-    while (std::getline(stream, rawLine)) {
-        const std::string line = trim(rawLine);
-
-        if (line.empty()) {
-            continue;
-        }
-        if (line[0] == '#') {
-            continue;
-        }
-
-        if (line == "[meta]") {
-            currentSection = Section::META;
-            continue;
-        }
-
-        if (line == "[objects]") {
-            currentSection = Section::OBJECTS;
-            continue;
-        }
-
-        const std::vector<std::string> tokens = splitWhitespace(line);
-
-        switch (currentSection) {
-        case Section::META:
-            parseMeta(levelData, tokens);
-            break;
-
-        case Section::OBJECTS:
-            parseObject(levelData, tokens);
-            break;
-
-        default:
-            break;
-        }
-    }
-
-    std::sort(
-        levelData.allObjects.begin(),
-        levelData.allObjects.end(),
-        [](const std::shared_ptr<World::WorldObject>& a,
-           const std::shared_ptr<World::WorldObject>& b) {
-            return a->getPosition().x < b->getPosition().x;
-        }
-    );
+    readMeta(levelData, root);
+    readObjects(levelData, root);
+    sortObjectsByX(levelData);
 
     return levelData;
 }

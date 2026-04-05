@@ -13,7 +13,6 @@ public:
     HazardObject(HazardType hazardType) 
         :   World::WorldObject(ObjectType::HAZARD),
             m_HazardType(hazardType) {
-        
     }
 
     virtual ~HazardObject() = default;

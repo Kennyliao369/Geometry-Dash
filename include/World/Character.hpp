@@ -51,6 +51,26 @@ public:
         return m_IsOnGround;
     }
 
+    const glm::vec2& getVelocity() const {
+        return m_Velocity;
+    }
+
+    void setVelocity(const glm::vec2& velocity) {
+        m_Velocity = velocity;
+    }
+
+    void setVelocityX(float x) {
+        m_Velocity.x = x;
+    }
+
+    void setVelocityY(float y) {
+        m_Velocity.y = y;
+    }
+
+    CharacterType getCharacterType() const {
+        return m_CharacterType;
+    }
+
     void update(const float dt);
 
 private:
@@ -64,9 +84,9 @@ private:
     glm::vec2 m_Velocity = {0.0f, 0.0f};
     bool m_IsOnGround = false;
 
-    float m_MoveSpeed = 6.0f;
-    float m_Gravity = -28.0f;
-    float m_JumpSpeed = 12.0f;
+    float m_MoveSpeed = 8.0f;
+    float m_Gravity = -60.0f;
+    float m_JumpSpeed = 18.0f;
     float m_ShipLiftSpeed = 18.0f;
 
 };

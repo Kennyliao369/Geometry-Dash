@@ -17,23 +17,16 @@ enum class ObjectType {
     UNKNOWN
 };
 
+enum class ShapeType {
+    BOX,
+    CIRCLE,
+    TRIANGLE,
+    UNKNOWN
+};
 
 namespace World {
 
 class WorldObject {
-public:
-    Util::Transform m_ImageTransform;
-
-    void setImageSize(glm::vec2 size);
-
-    void setImageTranslation(glm::vec2 position) {
-        m_ImageTransform.translation = position;
-    }
-
-    Util::Transform getImageTransform() {
-        return m_ImageTransform;
-    }
-
 public:
     WorldObject() = default;
 
@@ -125,6 +118,32 @@ public:
     glm::vec2 getSize() const {
         return m_WorldSize;
     }
+
+    glm::vec2 getDrawableSize() const {
+        if (!m_Drawable) {
+            return {1.0f, 1.0f};
+        }
+        return m_Drawable->GetSize();
+    }
+
+    void Draw(const Util::Transform& renderTransform);
+
+    void setShapeType(ShapeType shapeType) {
+        m_ShapeType = shapeType;
+    }
+
+    ShapeType getShapeType() const {
+        return m_ShapeType;
+    }
+
+    void setRotation(float rotationDegrees) {
+        m_Rotation = rotationDegrees;
+    }
+
+    float getRotation() const {
+        return m_Rotation;
+    }
+
     
     void Draw();
 
@@ -138,6 +157,8 @@ protected:
     glm::vec2 m_Pivot = {0, 0};    
     std::vector<std::shared_ptr<WorldObject>> m_Children;
 
+    ShapeType m_ShapeType = ShapeType::BOX;
+    float m_Rotation = 0.0f;
 };
 }
 #endif

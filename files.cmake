@@ -9,6 +9,9 @@ set(INCLUDE_FILES
     World/DecorationObject.hpp
     World/SolidObject.hpp
     World/TriggerObject.hpp
+    World/BackgroundRender.hpp
+
+    World/Collision.hpp
 
     Level/LevelData.hpp
     Level/LevelLoader.hpp
@@ -25,6 +28,9 @@ set(SRC_FILES
     World/Character.cpp
     World/WorldRender.cpp
     World/WorldObject.cpp
+    World/BackgroundRender.cpp
+
+    World/Collision.cpp
 
     Level/LevelLoader.cpp
 

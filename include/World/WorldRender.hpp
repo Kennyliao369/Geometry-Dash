@@ -50,7 +50,7 @@ private:
     };
 
     void updateFocusPosition();
-    void projectObjectToScreen(StackInfo& worldObject);
+    Util::Transform projectObjectToScreen(const StackInfo& stackInfo) const;
     void updateCellSize();
 
 private:

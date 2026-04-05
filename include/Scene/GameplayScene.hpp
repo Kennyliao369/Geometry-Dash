@@ -8,6 +8,8 @@
 #include "World/WorldObject.hpp"
 
 #include "World/Character.hpp"
+
+#include "World/BackgroundRender.hpp"
 /*
 #include "World/HazardObject.hpp"
 #include "World/DecorationObject.hpp"
@@ -42,6 +44,7 @@ private:
 
     LevelData m_LevelData;
     World::WorldRender m_WorldRoot;
+    World::BackgroundRender m_BackgroundRoot;
 
     std::shared_ptr<Character> m_Player;
     std::vector<std::shared_ptr<World::WorldObject>> m_AllObjects;

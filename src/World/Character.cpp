@@ -10,7 +10,7 @@ void Character::handleInput() {
     switch (m_CharacterType) {
     case CharacterType::CUBE:
         m_Velocity.x = m_MoveSpeed;
-        if (Util::Input::IsKeyDown(Util::Keycode::SPACE) && m_IsOnGround) {
+        if (Util::Input::IsKeyPressed(Util::Keycode::SPACE) && m_IsOnGround) {
             m_Velocity.y = m_JumpSpeed;
             m_IsOnGround = false;
         }
@@ -18,7 +18,7 @@ void Character::handleInput() {
 
     case CharacterType::SHIP:
         m_Velocity.x = m_MoveSpeed;
-        if (Util::Input::IsKeyDown(Util::Keycode::SPACE)) {
+        if (Util::Input::IsKeyPressed(Util::Keycode::SPACE)) {
             m_Velocity.y = m_ShipLiftSpeed;
         }
         break;

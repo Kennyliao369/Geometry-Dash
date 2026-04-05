@@ -57,13 +57,31 @@ void WorldRender::clearTarget() {
 glm::vec2 WorldRender::getFocusPosition() {
     return m_FocusPosition;
 }
+Util::Transform WorldRender::projectObjectToScreen(const StackInfo& stackInfo) const {
+    const auto& object = stackInfo.m_WorldObject;
 
-void WorldRender::projectObjectToScreen(StackInfo& worldObject) {
-    const glm::vec2 screenPosition = (worldObject.m_WorldObject->getPosition() - m_FocusPosition ) * m_CellSize;
-    worldObject.m_WorldObject->setImageTranslation(screenPosition);
+    Util::Transform localTransform{};
+    localTransform.translation =
+        (object->getPosition() - m_FocusPosition) * m_CellSize;
 
-    const glm::vec2 imageSize = worldObject.m_WorldObject->getSize() * m_CellSize;
-    worldObject.m_WorldObject->setImageSize(imageSize);
+    const glm::vec2 desiredImageSize = object->getSize() * m_CellSize;
+    const glm::vec2 drawableSize = object->getDrawableSize();
+
+    localTransform.scale = {
+        drawableSize.x != 0.0f ? desiredImageSize.x / drawableSize.x : 1.0f,
+        drawableSize.y != 0.0f ? desiredImageSize.y / drawableSize.y : 1.0f
+    };
+
+    localTransform.rotation = glm::radians(object->getRotation());
+
+    Util::Transform finalTransform = localTransform;
+
+    // 先做一個 MVP 版合成：
+    finalTransform.translation += stackInfo.m_ParentTransform.translation;
+    finalTransform.rotation += stackInfo.m_ParentTransform.rotation;
+    finalTransform.scale *= stackInfo.m_ParentTransform.scale;
+
+    return finalTransform;
 }
 
 
@@ -110,31 +128,32 @@ void WorldRender::updateCellSize() {
 void WorldRender::update() {
     updateFocusPosition();
 
-    auto compareFunction = [](const StackInfo &a, const StackInfo &b) {
+    auto compareFunction = [](const StackInfo& a, const StackInfo& b) {
         return a.m_WorldObject->GetZIndex() > b.m_WorldObject->GetZIndex();
     };
-    std::priority_queue<StackInfo, std::vector<StackInfo>,
-                        decltype(compareFunction)>
+
+    std::priority_queue<StackInfo, std::vector<StackInfo>, decltype(compareFunction)>
         renderQueue(compareFunction);
-    
+
     while (!m_ObjectsStack.empty()) {
         auto curr = m_ObjectsStack.back();
         m_ObjectsStack.pop_back();
+
         renderQueue.push(curr);
 
-        for (const auto &child : curr.m_WorldObject->GetChildren()) {
-            m_ObjectsStack.push_back(
-                StackInfo{child, curr.m_WorldObject->getImageTransform()});
+        const Util::Transform currRenderTransform = projectObjectToScreen(curr);
+
+        for (const auto& child : curr.m_WorldObject->GetChildren()) {
+            m_ObjectsStack.push_back(StackInfo{child, currRenderTransform});
         }
     }
 
-    // draw all in render queue by order
     while (!renderQueue.empty()) {
         auto curr = renderQueue.top();
         renderQueue.pop();
 
-        projectObjectToScreen(curr);
-        curr.m_WorldObject->Draw();
+        const Util::Transform renderTransform = projectObjectToScreen(curr);
+        curr.m_WorldObject->Draw(renderTransform);
     }
 }
 }
