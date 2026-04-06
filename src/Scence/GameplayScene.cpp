@@ -13,11 +13,15 @@ namespace {
     };
 
     SolidHitType classifySolidHit(const World::Collision::CollisionResult& result) {
-        if (result.normal.y < -0.5f) {
-            return SolidHitType::LANDING;
-        }
+        const float absX = std::abs(result.normal.x);
+        const float absY = std::abs(result.normal.y);
 
-        if (result.normal.y > 0.5f) {
+        constexpr float kVerticalBias = 1.0f;
+
+        if (absY > absX * kVerticalBias) {
+            if (result.normal.y < 2.5f) {
+                return SolidHitType::LANDING;
+            }
             return SolidHitType::CEILING;
         }
 
@@ -51,8 +55,11 @@ GameplayScene::GameplayScene()
     m_Player->SetDrawable(std::make_shared<Util::Image>(RESOURCE_DIR "/Image/Role/cube_00.png"));
     m_Player->setPosition(m_LevelData.meta.playerSpawn);
     m_Player->setSize(glm::vec2(1.0f, 1.0f));
-    m_Player->setShapeType(ShapeType::CIRCLE);
+    m_Player->setShapeType(ShapeType::BOX);
 
+    m_WorldRoot.setFocusSmoothing({1.0f, 0.3f});
+    m_WorldRoot.setTargetAnchorRatio({0.1f, 0.2f});
+    m_WorldRoot.setVerticalDeadZoneRatio(0.2f);
     m_WorldRoot.focus(m_Player);
     updateVisibleRange();
 
@@ -76,72 +83,129 @@ void GameplayScene::update(const float dt) {
     // m_Player->setOnGround(false);
     m_Player->update(dt);
     
-    updateVisibleRange();
-
     // updatePlayerPhysics(dt);
-    resolveSolidCollisions();
+    resolveSolidCollisions(dt);
     checkHazardCollisions();
     checkTriggerOverlaps();
     
+    m_WorldRoot.updateFocus(dt);
+    updateVisibleRange();
 
     renderWorld();
     // m_UiRoot.Update();
 }
 
 
-void GameplayScene::resolveSolidCollisions() {
-    glm::vec2 playerPosition = m_Player->getPosition();
+void GameplayScene::resolveSolidCollisions(const float dt) {
+    const glm::vec2 desiredPosition = m_Player->getPosition();
     glm::vec2 playerVelocity = m_Player->getVelocity();
+
+    // 由 Character::update(dt) 反推本幀起點
+    glm::vec2 playerPosition = desiredPosition - playerVelocity * dt;
+    const glm::vec2 moveDelta = playerVelocity * dt;
 
     bool groundedThisFrame = false;
     constexpr float kSkin = 0.001f;
 
-    for (std::size_t i = m_VisibleRange.x; i < m_VisibleRange.y; ++i) {
-        const auto& object = m_AllObjects[i];
+    const glm::vec2 playerHalfSize = m_Player->getSize() * 0.5f;
 
-        if (!object) {
-            continue;
-        }
+    // ---------- Y phase ----------
+    if (moveDelta.y != 0.0f) {
+        playerPosition.y += moveDelta.y;
 
-        if (object->getType() != ObjectType::SOLID) {
-            continue;
-        }
-
-        // 先讓碰撞檢查使用目前修正後的位置與速度
         m_Player->setPosition(playerPosition);
         m_Player->setVelocity(playerVelocity);
 
-        const auto result = World::Collision::objectVsObject(*m_Player, *object);
+        for (std::size_t i = m_VisibleRange.x; i < m_VisibleRange.y; ++i) {
+            const auto& object = m_AllObjects[i];
 
-        if (!result.hit) {
-            continue;
+            if (!object) {
+                continue;
+            }
+
+            if (object->getType() != ObjectType::SOLID) {
+                continue;
+            }
+
+            const auto result = World::Collision::objectVsObject(*m_Player, *object);
+
+            if (!result.hit) {
+                continue;
+            }
+
+            const glm::vec2 solidCenter = object->getPosition();
+            const glm::vec2 solidHalfSize = object->getSize() * 0.5f;
+
+            if (moveDelta.y < 0.0f) {
+                // 往下掉，直接視為 LANDING
+                playerPosition.y = solidCenter.y + solidHalfSize.y + playerHalfSize.y + kSkin;
+
+                if (playerVelocity.y < 0.0f) {
+                    playerVelocity.y = 0.0f;
+                }
+
+                groundedThisFrame = true;
+            }
+            else if (moveDelta.y > 0.0f) {
+                // 往上撞，直接視為 CEILING
+                if (shouldDieFromSolidHit(m_Player->getCharacterType(), SolidHitType::CEILING)) {
+                    m_Player->setPosition(m_LevelData.meta.playerSpawn);
+                    m_Player->setVelocity({0.0f, 0.0f});
+                    m_Player->setOnGround(false);
+
+                    LOG_DEBUG("Player died from ceiling collision");
+                    return;
+                }
+
+                playerPosition.y = solidCenter.y - solidHalfSize.y - playerHalfSize.y - kSkin;
+
+                if (playerVelocity.y > 0.0f) {
+                    playerVelocity.y = 0.0f;
+                }
+            }
+
+            // 同步修正後狀態，避免同幀後續物件還用舊位置
+            m_Player->setPosition(playerPosition);
+            m_Player->setVelocity(playerVelocity);
         }
+    }
 
-        const SolidHitType hitType = classifySolidHit(result);
+    // ---------- X phase ----------
+    if (moveDelta.x != 0.0f) {
+        playerPosition.x += moveDelta.x;
 
-        if (shouldDieFromSolidHit(m_Player->getCharacterType(), hitType)) {
-            m_Player->setPosition(m_LevelData.meta.playerSpawn);
-            m_Player->setVelocity({0.0f, 0.0f});
-            m_Player->setOnGround(false);
+        m_Player->setPosition(playerPosition);
+        m_Player->setVelocity(playerVelocity);
 
-            LOG_DEBUG("Player died from solid collision");
-            return;
-        }
+        for (std::size_t i = m_VisibleRange.x; i < m_VisibleRange.y; ++i) {
+            const auto& object = m_AllObjects[i];
 
-        // 不死亡的 solid collision 才做正常解碰撞
-        playerPosition -= result.normal * (result.depth + kSkin);
+            if (!object) {
+                continue;
+            }
 
-        const float normalSpeed = glm::dot(playerVelocity, result.normal);
-        if (normalSpeed > 0.0f) {
-            playerVelocity -= result.normal * normalSpeed;
-        }
+            if (object->getType() != ObjectType::SOLID) {
+                continue;
+            }
 
-        if (hitType == SolidHitType::LANDING) {
-            groundedThisFrame = true;
+            const auto result = World::Collision::objectVsObject(*m_Player, *object);
 
-            // 落地時直接清掉向下速度，避免看起來像反彈
-            if (playerVelocity.y < 0.0f) {
-                playerVelocity.y = 0.0f;
+            if (!result.hit) {
+                continue;
+            }
+
+            const SolidHitType hitType = classifySolidHit(result);
+
+            // X 階段如果碰撞角度仍然明顯像 SIDE，就死亡
+            // 如果角度比較像 LANDING / CEILING，代表可能只是踩到下一塊地板的邊角，先放過
+            if (hitType == SolidHitType::SIDE &&
+                shouldDieFromSolidHit(m_Player->getCharacterType(), SolidHitType::SIDE)) {
+                m_Player->setPosition(m_LevelData.meta.playerSpawn);
+                m_Player->setVelocity({0.0f, 0.0f});
+                m_Player->setOnGround(false);
+
+                LOG_DEBUG("Player died from side collision");
+                return;
             }
         }
     }

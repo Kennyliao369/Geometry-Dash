@@ -1,5 +1,7 @@
 #include "World/Character.hpp"
 
+#include <cmath>
+
 void Character::update(const float dt) {
     handleInput();
     applyPhysics(dt);
@@ -10,8 +12,12 @@ void Character::handleInput() {
     switch (m_CharacterType) {
     case CharacterType::CUBE:
         m_Velocity.x = m_MoveSpeed;
+
         if (Util::Input::IsKeyPressed(Util::Keycode::SPACE) && m_IsOnGround) {
-            m_Velocity.y = m_JumpSpeed;
+            const float gravityMagnitude = std::abs(m_Gravity);
+            const float jumpVelocity = std::sqrt(2.0f * gravityMagnitude * m_JumpHeight);
+
+            m_Velocity.y = jumpVelocity;
             m_IsOnGround = false;
         }
         break;

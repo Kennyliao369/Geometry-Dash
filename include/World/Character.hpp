@@ -84,8 +84,8 @@ private:
     glm::vec2 m_Velocity = {0.0f, 0.0f};
     bool m_IsOnGround = false;
 
-    float m_MoveSpeed = 8.0f;
-    float m_Gravity = -60.0f;
+    float m_MoveSpeed = 10.66666f;
+    float m_Gravity = -80.0f;
     float m_JumpSpeed = 18.0f;
     float m_ShipLiftSpeed = 18.0f;
 

@@ -32,7 +32,7 @@ public:
 private:
     void updatePlayerPhysics(float dt);
     
-    void resolveSolidCollisions();
+    void resolveSolidCollisions(const float dt);
     void checkHazardCollisions();
     void checkTriggerOverlaps();
 
@@ -50,7 +50,7 @@ private:
     std::vector<std::shared_ptr<World::WorldObject>> m_AllObjects;
 
     glm::vec2 m_VisibleRange = {0.0f, 0.0f};
-    glm::vec2 m_VisiblePadding = {0.0f, 0.0f};
+    glm::vec2 m_VisiblePadding = {4.0f, 4.0f};
     
     
     /*

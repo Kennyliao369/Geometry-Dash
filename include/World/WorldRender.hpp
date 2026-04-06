@@ -41,6 +41,14 @@ public:
     glm::vec2 getVisibleWorldSize() const;
     float getCellSize() const;
 
+    void updateFocus(float dt);
+
+    void setFocusSmoothing(const glm::vec2& smoothing);
+    void setVerticalDeadZoneRatio(float ratio);
+
+    void setTargetAnchorRatio(const glm::vec2& anchorRatio);
+    glm::vec2 getTargetAnchorRatio() const;
+
     void update();
 
 private:
@@ -52,7 +60,10 @@ private:
     void updateFocusPosition();
     Util::Transform projectObjectToScreen(const StackInfo& stackInfo) const;
     void updateCellSize();
+    void updateFocusPosition(float dt);
 
+    glm::vec2 getTargetTrackingOffset() const;
+    
 private:
     glm::vec2 m_ScreenSize = {1280.0f, 720.0f};
     glm::vec2 m_VisibleWorldSize = {16.0f, 12.0f};
@@ -61,7 +72,18 @@ private:
     std::vector<StackInfo> m_ObjectsStack;
 
     std::weak_ptr<WorldObject> m_FocusTarget;
-    glm::vec2 m_FocusPosition = {0.0f, 0.0f};
+    glm::vec2 m_FocusPosition = {100.0f, 100.0f};
+
+    glm::vec2 m_FocusSmoothing = {1.0f, 0.3f};
+    // x = 1.0f 代表幾乎直接跟
+    // y = 0.3f 代表平滑追焦
+
+    float m_VerticalDeadZoneRatio = 0.2f;
+    // 注意：這裡是「中心上下各 20%」
+    // 如果你想要總共只有 20%，就改成 0.1f
+
+
+    glm::vec2 m_TargetAnchorRatio = {0.2f, 0.5f};
 };
 
 }

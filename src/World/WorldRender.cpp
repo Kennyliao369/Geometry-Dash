@@ -2,6 +2,19 @@
 
 #include <queue>
 #include <algorithm>
+#include <cmath>
+
+namespace {
+    float toFrameIndependentFactor(const float factorAt60Fps, const float dt) {
+        const float factor = std::clamp(factorAt60Fps, 0.0f, 1.0f);
+
+        if (factor >= 1.0f) {
+            return 1.0f;
+        }
+
+        return 1.0f - std::pow(1.0f - factor, dt * 60.0f);
+    }
+}
 
 namespace World {
 
@@ -42,12 +55,62 @@ void WorldRender::focus(glm::vec2 position) {
 
 void WorldRender::focus(const std::shared_ptr<WorldObject> target) {
     m_FocusTarget = target;
+
+    if (target) {
+        m_FocusPosition = target->getPosition() + getTargetTrackingOffset();
+    }
 }
 
-void WorldRender::updateFocusPosition() {
-    if (auto target = m_FocusTarget.lock()) {
-        m_FocusPosition = target->getPosition();
+void WorldRender::updateFocusPosition(const float dt) {
+    auto target = m_FocusTarget.lock();
+    if (!target) {
+        return;
     }
+
+    const glm::vec2 targetPosition = target->getPosition();
+    const glm::vec2 targetTrackingPosition =
+        targetPosition + getTargetTrackingOffset();
+    glm::vec2 desiredFocusPosition = m_FocusPosition;
+
+    // X 軸：直接跟玩家
+    desiredFocusPosition.x = targetTrackingPosition.x;
+
+    // Y 軸：dead zone
+    const float deadZoneHalfHeight =
+        m_VisibleWorldSize.y * m_VerticalDeadZoneRatio;
+
+    const float deltaY = targetPosition.y - m_FocusPosition.y;
+
+    if (deltaY > deadZoneHalfHeight) {
+        desiredFocusPosition.y = targetPosition.y - deadZoneHalfHeight;
+    }
+    else if (deltaY < -deadZoneHalfHeight) {
+        desiredFocusPosition.y = targetPosition.y + deadZoneHalfHeight;
+    }
+    // 若在 dead zone 內，就保持 desiredFocusPosition.y 不變
+
+    const float followFactorX =
+        toFrameIndependentFactor(m_FocusSmoothing.x, dt);
+    const float followFactorY =
+        toFrameIndependentFactor(m_FocusSmoothing.y, dt);
+
+    m_FocusPosition.x +=
+        (desiredFocusPosition.x - m_FocusPosition.x) * followFactorX;
+    m_FocusPosition.y +=
+        (desiredFocusPosition.y - m_FocusPosition.y) * followFactorY;
+}
+
+void WorldRender::setFocusSmoothing(const glm::vec2& smoothing) {
+    m_FocusSmoothing.x = std::clamp(smoothing.x, 0.0f, 1.0f);
+    m_FocusSmoothing.y = std::clamp(smoothing.y, 0.0f, 1.0f);
+}
+
+void WorldRender::setVerticalDeadZoneRatio(const float ratio) {
+    m_VerticalDeadZoneRatio = std::clamp(ratio, 0.0f, 0.5f);
+}
+
+void WorldRender::updateFocus(float dt) {
+    updateFocusPosition(dt);
 }
 
 void WorldRender::clearTarget() {
@@ -125,9 +188,23 @@ void WorldRender::updateCellSize() {
     m_CellSize = std::min(cellSizeX, cellSizeY);
 }
 
-void WorldRender::update() {
-    updateFocusPosition();
+void WorldRender::setTargetAnchorRatio(const glm::vec2& anchorRatio) {
+    m_TargetAnchorRatio.x = std::clamp(anchorRatio.x, 0.0f, 1.0f);
+    m_TargetAnchorRatio.y = std::clamp(anchorRatio.y, 0.0f, 1.0f);
+}
 
+glm::vec2 WorldRender::getTargetAnchorRatio() const {
+    return m_TargetAnchorRatio;
+}
+
+glm::vec2 WorldRender::getTargetTrackingOffset() const {
+    return {
+        (0.5f - m_TargetAnchorRatio.x) * m_VisibleWorldSize.x,
+        (0.5f - m_TargetAnchorRatio.y) * m_VisibleWorldSize.y
+    };
+}
+
+void WorldRender::update() {
     auto compareFunction = [](const StackInfo& a, const StackInfo& b) {
         return a.m_WorldObject->GetZIndex() > b.m_WorldObject->GetZIndex();
     };

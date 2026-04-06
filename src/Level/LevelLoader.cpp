@@ -14,6 +14,7 @@
 #include <fstream>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 using json = nlohmann::json;
 
@@ -58,20 +59,13 @@ namespace {
         levelData.meta.playerSpawn = parseVec2(meta, "playerSpawn");
     }
 
-    std::shared_ptr<World::WorldObject> createObjectFromJson(const json& objectJson) {
-        if (!objectJson.contains("type") || !objectJson.at("type").is_string()) {
-            throw std::runtime_error("object requires string field: type");
-        }
-        if (!objectJson.contains("material") || !objectJson.at("material").is_string()) {
-            throw std::runtime_error("object requires string field: material");
-        }
-
-        const std::string type = objectJson.at("type").get<std::string>();
-        const std::string material = objectJson.at("material").get<std::string>();
-        const glm::vec2 position = parseVec2(objectJson, "position");
-        const glm::vec2 size = parseVec2(objectJson, "size");
-        const float rotation = objectJson.value("rotation", 0.0f);
-
+    std::shared_ptr<World::WorldObject> createObject(
+        const std::string& type,
+        const std::string& material,
+        const glm::vec2& position,
+        const glm::vec2& size,
+        const float rotation
+    ) {
         std::shared_ptr<World::WorldObject> object;
 
         if (type == "block") {
@@ -141,13 +135,52 @@ namespace {
         return object;
     }
 
+    std::vector<std::shared_ptr<World::WorldObject>> createObjectsFromJson(const json& objectJson) {
+        if (!objectJson.contains("type") || !objectJson.at("type").is_string()) {
+            throw std::runtime_error("object requires string field: type");
+        }
+        if (!objectJson.contains("material") || !objectJson.at("material").is_string()) {
+            throw std::runtime_error("object requires string field: material");
+        }
+
+        const std::string type = objectJson.at("type").get<std::string>();
+        const std::string material = objectJson.at("material").get<std::string>();
+        const glm::vec2 basePosition = parseVec2(objectJson, "position");
+        const glm::vec2 size = parseVec2(objectJson, "size");
+        const float rotation = objectJson.value("rotation", 0.0f);
+        const int repeat = objectJson.value("repeat", 1);
+
+        if (repeat <= 0) {
+            throw std::runtime_error("repeat must be greater than 0");
+        }
+
+        std::vector<std::shared_ptr<World::WorldObject>> objects;
+        objects.reserve(static_cast<std::size_t>(repeat));
+
+        for (int i = 0; i < repeat; ++i) {
+            glm::vec2 repeatedPosition = basePosition;
+            repeatedPosition.x += size.x * static_cast<float>(i);
+
+            objects.push_back(
+                createObject(type, material, repeatedPosition, size, rotation)
+            );
+        }
+
+        return objects;
+    }
+
     void readObjects(LevelData& levelData, const json& root) {
         if (!root.contains("objects") || !root.at("objects").is_array()) {
             throw std::runtime_error("level json requires array field: objects");
         }
 
         for (const auto& objectJson : root.at("objects")) {
-            levelData.allObjects.push_back(createObjectFromJson(objectJson));
+            auto objects = createObjectsFromJson(objectJson);
+            levelData.allObjects.insert(
+                levelData.allObjects.end(),
+                objects.begin(),
+                objects.end()
+            );
         }
     }
 
