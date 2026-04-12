@@ -3,6 +3,7 @@
 #include <cmath>
 
 void Character::update(const float dt) {
+    m_PreviousPosition = m_WorldPosition;
     handleInput();
     applyPhysics(dt);
     m_WorldPosition += m_Velocity * dt;

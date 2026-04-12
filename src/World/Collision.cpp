@@ -1,12 +1,11 @@
 #include "World/Collision.hpp"
 
 #include <glm/geometric.hpp>
-#include <glm/trigonometric.hpp>
 
 #include <algorithm>
 #include <cmath>
 #include <limits>
-#include <stdexcept>
+#include <vector>
 
 namespace World::Collision {
 
@@ -18,34 +17,34 @@ namespace {
         float max = 0.0f;
     };
 
-    glm::vec2 safeNormalize(const glm::vec2& v) {
-        const float length = glm::length(v);
+    glm::vec2 safeNormalize(const glm::vec2& vector) {
+        const float length = glm::length(vector);
         if (length <= EPSILON) {
             return {0.0f, 0.0f};
         }
-        return v / length;
+        return vector / length;
     }
 
-    glm::vec2 perpendicular(const glm::vec2& v) {
-        return {-v.y, v.x};
+    glm::vec2 perpendicular(const glm::vec2& vector) {
+        return {-vector.y, vector.x};
     }
 
-    glm::vec2 polygonCenter(const PolygonData& polygon) {
-        glm::vec2 sum{0.0f, 0.0f};
+    glm::vec2 polygonCenter(const World::PolygonGeometry& polygon) {
+        glm::vec2 center{0.0f, 0.0f};
 
-        for (const auto& vertex : polygon.vertices) {
-            sum += vertex;
+        for (const glm::vec2& vertex : polygon.vertices) {
+            center += vertex;
         }
 
         if (polygon.vertices.empty()) {
-            return sum;
+            return center;
         }
 
-        return sum / static_cast<float>(polygon.vertices.size());
+        return center / static_cast<float>(polygon.vertices.size());
     }
 
     Projection projectPolygon(
-        const PolygonData& polygon,
+        const World::PolygonGeometry& polygon,
         const glm::vec2& axis
     ) {
         Projection projection;
@@ -62,7 +61,7 @@ namespace {
     }
 
     Projection projectCircle(
-        const CircleData& circle,
+        const World::CircleGeometry& circle,
         const glm::vec2& axis
     ) {
         const float centerProjection = glm::dot(circle.center, axis);
@@ -82,7 +81,7 @@ namespace {
     }
 
     void appendPolygonAxes(
-        const PolygonData& polygon,
+        const World::PolygonGeometry& polygon,
         std::vector<glm::vec2>& axes
     ) {
         const std::size_t count = polygon.vertices.size();
@@ -100,14 +99,16 @@ namespace {
     }
 
     glm::vec2 closestPolygonVertex(
-        const PolygonData& polygon,
+        const World::PolygonGeometry& polygon,
         const glm::vec2& point
     ) {
         float bestDistance2 = std::numeric_limits<float>::max();
         glm::vec2 bestVertex{0.0f, 0.0f};
 
-        for (const auto& vertex : polygon.vertices) {
-            const float distance2 = glm::dot(vertex - point, vertex - point);
+        for (const glm::vec2& vertex : polygon.vertices) {
+            const glm::vec2 delta = vertex - point;
+            const float distance2 = glm::dot(delta, delta);
+
             if (distance2 < bestDistance2) {
                 bestDistance2 = distance2;
                 bestVertex = vertex;
@@ -130,8 +131,8 @@ namespace {
     }
 
     CollisionResult satPolygonVsPolygon(
-        const PolygonData& a,
-        const PolygonData& b
+        const World::PolygonGeometry& a,
+        const World::PolygonGeometry& b
     ) {
         CollisionResult result;
         result.hit = true;
@@ -141,7 +142,7 @@ namespace {
         appendPolygonAxes(a, axes);
         appendPolygonAxes(b, axes);
 
-        for (const auto& axis : axes) {
+        for (const glm::vec2& axis : axes) {
             const Projection projectionA = projectPolygon(a, axis);
             const Projection projectionB = projectPolygon(b, axis);
 
@@ -161,8 +162,8 @@ namespace {
     }
 
     CollisionResult satCircleVsPolygon(
-        const CircleData& circle,
-        const PolygonData& polygon
+        const World::CircleGeometry& circle,
+        const World::PolygonGeometry& polygon
     ) {
         CollisionResult result;
         result.hit = true;
@@ -177,7 +178,7 @@ namespace {
             axes.push_back(vertexAxis);
         }
 
-        for (const auto& axis : axes) {
+        for (const glm::vec2& axis : axes) {
             const Projection circleProjection = projectCircle(circle, axis);
             const Projection polygonProjection = projectPolygon(polygon, axis);
 
@@ -195,70 +196,19 @@ namespace {
         orientNormalFromAToB(result, circle.center, polygonCenter(polygon));
         return result;
     }
-
-} // namespace
-
-glm::vec2 rotatePoint(const glm::vec2& point, const float degrees) {
-    const float radians = glm::radians(degrees);
-    const float c = std::cos(radians);
-    const float s = std::sin(radians);
-
-    return {
-        point.x * c - point.y * s,
-        point.x * s + point.y * c
-    };
 }
 
-PolygonData buildPolygon(const WorldObject& object) {
-    const glm::vec2 center = object.getPosition();
-    const glm::vec2 halfSize = object.getSize() * 0.5f;
-
-    std::vector<glm::vec2> localVertices;
-
-    switch (object.getShapeType()) {
-    case ShapeType::BOX:
-        localVertices = {
-            {-halfSize.x, -halfSize.y},
-            { halfSize.x, -halfSize.y},
-            { halfSize.x,  halfSize.y},
-            {-halfSize.x,  halfSize.y}
-        };
-        break;
-
-    case ShapeType::TRIANGLE:
-        localVertices = {
-            {-halfSize.x, -halfSize.y},
-            { halfSize.x, -halfSize.y},
-            {0.0f,         halfSize.y}
-        };
-        break;
-
-    case ShapeType::CIRCLE:
-        return {};
-    }
-
-    PolygonData polygon;
-    polygon.vertices.reserve(localVertices.size());
-
-    for (const auto& localVertex : localVertices) {
-        polygon.vertices.push_back(
-            center + rotatePoint(localVertex, object.getRotation())
-        );
-    }
-
-    return polygon;
-}
-
-CircleData buildCircle(const WorldObject& object) {
-    CircleData circle;
-    circle.center = object.getPosition();
-    circle.radius = std::min(object.getSize().x, object.getSize().y) * 0.5f;
-    return circle;
+bool aabbVsAabb(
+    const World::AABB& a,
+    const World::AABB& b
+) {
+    return a.min.x <= b.max.x && a.max.x >= b.min.x &&
+           a.min.y <= b.max.y && a.max.y >= b.min.y;
 }
 
 CollisionResult polygonVsPolygon(
-    const PolygonData& a,
-    const PolygonData& b
+    const World::PolygonGeometry& a,
+    const World::PolygonGeometry& b
 ) {
     if (a.vertices.size() < 3 || b.vertices.size() < 3) {
         return {};
@@ -268,8 +218,8 @@ CollisionResult polygonVsPolygon(
 }
 
 CollisionResult circleVsCircle(
-    const CircleData& a,
-    const CircleData& b
+    const World::CircleGeometry& a,
+    const World::CircleGeometry& b
 ) {
     CollisionResult result;
 
@@ -286,7 +236,8 @@ CollisionResult circleVsCircle(
 
     if (distance > EPSILON) {
         result.normal = delta / distance;
-    } else {
+    }
+    else {
         result.normal = {1.0f, 0.0f};
     }
 
@@ -294,8 +245,8 @@ CollisionResult circleVsCircle(
 }
 
 CollisionResult circleVsPolygon(
-    const CircleData& circle,
-    const PolygonData& polygon
+    const World::CircleGeometry& circle,
+    const World::PolygonGeometry& polygon
 ) {
     if (polygon.vertices.size() < 3) {
         return {};
@@ -304,30 +255,44 @@ CollisionResult circleVsPolygon(
     return satCircleVsPolygon(circle, polygon);
 }
 
-CollisionResult objectVsObject(
-    const WorldObject& a,
-    const WorldObject& b
+CollisionResult geometryVsGeometry(
+    const World::CollisionGeometry& a,
+    const World::CollisionGeometry& b
 ) {
-    const ShapeType shapeA = a.getShapeType();
-    const ShapeType shapeB = b.getShapeType();
-
-    if (shapeA == ShapeType::CIRCLE && shapeB == ShapeType::CIRCLE) {
-        return circleVsCircle(buildCircle(a), buildCircle(b));
+    if (std::holds_alternative<World::CircleGeometry>(a) &&
+        std::holds_alternative<World::CircleGeometry>(b)) {
+        return circleVsCircle(
+            std::get<World::CircleGeometry>(a),
+            std::get<World::CircleGeometry>(b)
+        );
     }
 
-    if (shapeA == ShapeType::CIRCLE && shapeB != ShapeType::CIRCLE) {
-        return circleVsPolygon(buildCircle(a), buildPolygon(b));
+    if (std::holds_alternative<World::CircleGeometry>(a) &&
+        std::holds_alternative<World::PolygonGeometry>(b)) {
+        return circleVsPolygon(
+            std::get<World::CircleGeometry>(a),
+            std::get<World::PolygonGeometry>(b)
+        );
     }
 
-    if (shapeA != ShapeType::CIRCLE && shapeB == ShapeType::CIRCLE) {
-        CollisionResult result = circleVsPolygon(buildCircle(b), buildPolygon(a));
+    if (std::holds_alternative<World::PolygonGeometry>(a) &&
+        std::holds_alternative<World::CircleGeometry>(b)) {
+        CollisionResult result = circleVsPolygon(
+            std::get<World::CircleGeometry>(b),
+            std::get<World::PolygonGeometry>(a)
+        );
+
         if (result.hit) {
             result.normal = -result.normal;
         }
+
         return result;
     }
 
-    return polygonVsPolygon(buildPolygon(a), buildPolygon(b));
+    return polygonVsPolygon(
+        std::get<World::PolygonGeometry>(a),
+        std::get<World::PolygonGeometry>(b)
+    );
 }
 
 } // namespace World::Collision

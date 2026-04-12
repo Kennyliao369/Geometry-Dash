@@ -1,56 +1,41 @@
 #ifndef COLLISION_HPP
 #define COLLISION_HPP
 
-#include "World/WorldObject.hpp"
+#include "World/CollisionGeometry.hpp"
 
 #include <glm/vec2.hpp>
 
-#include <vector>
-
 namespace World::Collision {
-
-struct CircleData {
-    glm::vec2 center = {0.0f, 0.0f};
-    float radius = 0.0f;
-};
-
-struct PolygonData {
-    std::vector<glm::vec2> vertices;
-};
 
 struct CollisionResult {
     bool hit = false;
-
-    // normal 定義為：從 A 指向 B 的方向
     glm::vec2 normal = {0.0f, 0.0f};
-
-    // 最小穿透深度
     float depth = 0.0f;
 };
 
-glm::vec2 rotatePoint(const glm::vec2& point, float degrees);
-
-PolygonData buildPolygon(const WorldObject& object);
-CircleData buildCircle(const WorldObject& object);
+bool aabbVsAabb(
+    const World::AABB& a,
+    const World::AABB& b
+);
 
 CollisionResult polygonVsPolygon(
-    const PolygonData& a,
-    const PolygonData& b
+    const World::PolygonGeometry& a,
+    const World::PolygonGeometry& b
 );
 
 CollisionResult circleVsCircle(
-    const CircleData& a,
-    const CircleData& b
+    const World::CircleGeometry& a,
+    const World::CircleGeometry& b
 );
 
 CollisionResult circleVsPolygon(
-    const CircleData& circle,
-    const PolygonData& polygon
+    const World::CircleGeometry& circle,
+    const World::PolygonGeometry& polygon
 );
 
-CollisionResult objectVsObject(
-    const WorldObject& a,
-    const WorldObject& b
+CollisionResult geometryVsGeometry(
+    const World::CollisionGeometry& a,
+    const World::CollisionGeometry& b
 );
 
 } // namespace World::Collision

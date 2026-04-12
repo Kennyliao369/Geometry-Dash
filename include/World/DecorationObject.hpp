@@ -9,18 +9,19 @@ enum class DecorationType {
 
 class DecorationObject : public World::WorldObject {
 public:
-    DecorationObject(DecorationType decorationType) 
-        :   World::WorldObject(ObjectType::DECORATION),
-            m_DecorationType(decorationType) {
-        
+    explicit DecorationObject(DecorationType decorationType)
+        : World::WorldObject(ObjectType::DECORATION),
+          m_DecorationType(decorationType) {
     }
 
+    ~DecorationObject() override = default;
 
-    virtual ~DecorationObject() = default;
+    DecorationType getDecorationType() const {
+        return m_DecorationType;
+    }
 
 private:
     DecorationType m_DecorationType;
-
 };
 
 #endif

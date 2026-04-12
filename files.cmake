@@ -10,6 +10,7 @@ set(INCLUDE_FILES
     World/SolidObject.hpp
     World/TriggerObject.hpp
     World/BackgroundRender.hpp
+    World/CollisionGeometry.hpp
 
     World/Collision.hpp
 
@@ -17,7 +18,6 @@ set(INCLUDE_FILES
     Level/LevelLoader.hpp
 
     Scene/Scene.hpp
-    Scene/SceneType.hpp
     Scene/MainMenuScene.hpp
     Scene/GameplayScene.hpp
 )

@@ -69,57 +69,49 @@ namespace {
         std::shared_ptr<World::WorldObject> object;
 
         if (type == "block") {
-            object = std::make_shared<SolidObject>(SolidType::BLOCK);
-            object->setShapeType(ShapeType::BOX);
+            object = std::make_shared<BlockObject>();
             object->SetDrawable(
                 std::make_shared<Util::Image>(RESOURCE_DIR "/Image/Solid/" + material + ".png")
             );
         }
         else if (type == "ground") {
-            object = std::make_shared<SolidObject>(SolidType::GROUND);
-            object->setShapeType(ShapeType::BOX);
+            object = std::make_shared<GroundObject>();
             object->SetDrawable(
                 std::make_shared<Util::Image>(RESOURCE_DIR "/Image/Solid/" + material + ".png")
             );
         }
         else if (type == "spike") {
-            object = std::make_shared<HazardObject>(HazardType::SPIKE);
-            object->setShapeType(ShapeType::TRIANGLE);
+            object = std::make_shared<SpikeObject>();
             object->SetDrawable(
                 std::make_shared<Util::Image>(RESOURCE_DIR "/Image/Hazard/" + material + ".png")
             );
         }
         else if (type == "acid") {
-            object = std::make_shared<HazardObject>(HazardType::ACID);
-            object->setShapeType(ShapeType::BOX);
+            object = std::make_shared<AcidObject>();
             object->SetDrawable(
                 std::make_shared<Util::Image>(RESOURCE_DIR "/Image/Hazard/" + material + ".png")
             );
         }
         else if (type == "beacon") {
             object = std::make_shared<DecorationObject>(DecorationType::BEACON);
-            object->setShapeType(ShapeType::UNKNOWN);
             object->SetDrawable(
                 std::make_shared<Util::Image>(RESOURCE_DIR "/Image/Decoration/" + material + ".png")
             );
         }
         else if (type == "portal") {
-            object = std::make_shared<TriggerObject>(TriggerType::PORTAL);
-            object->setShapeType(ShapeType::BOX);
+            object = std::make_shared<PortalObject>();
             object->SetDrawable(
                 std::make_shared<Util::Image>(RESOURCE_DIR "/Image/Trigger/" + material + ".png")
             );
         }
         else if (type == "pad") {
-            object = std::make_shared<TriggerObject>(TriggerType::PAD);
-            object->setShapeType(ShapeType::BOX);
+            object = std::make_shared<PadObject>();
             object->SetDrawable(
                 std::make_shared<Util::Image>(RESOURCE_DIR "/Image/Trigger/" + material + ".png")
             );
         }
         else if (type == "coin") {
-            object = std::make_shared<TriggerObject>(TriggerType::COIN);
-            object->setShapeType(ShapeType::CIRCLE);
+            object = std::make_shared<CoinObject>();
             object->SetDrawable(
                 std::make_shared<Util::Image>(RESOURCE_DIR "/Image/Trigger/" + material + ".png")
             );

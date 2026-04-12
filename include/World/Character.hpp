@@ -4,10 +4,10 @@
 #include "Util/GameObject.hpp"
 #include "Util/Image.hpp"
 
-#include "WorldObject.hpp"
+#include "World/WorldObject.hpp"
 
-#include "Util/Input.hpp" // !!!
-#include "Util/Keycode.hpp" //!!!
+#include "Util/Input.hpp"
+#include "Util/Keycode.hpp"
 
 #include <string>
 
@@ -20,20 +20,12 @@ class Character : public World::WorldObject {
 public:
     Character() = default;
 
-    Character(CharacterType characterType)
-        :   World::WorldObject(ObjectType::CHARACTER),
-            m_CharacterType(characterType) {
-        
-        
+    explicit Character(CharacterType characterType)
+        : World::WorldObject(ObjectType::CHARACTER),
+          m_CharacterType(characterType) {
     }
-    /*
-    Character(const std::string& imagePath, const glm::vec2& worldPosition = {0.0f, 0.0f}, const glm::vec2& worldSize = {1.0f, 1.0f})
-        : WorldObject(ObjectType::CHARACTER,
-        std::make_shared<Util::Image>(imagePath),
-        worldPosition, worldSize, 0) {}
-    */
 
-    virtual ~Character() = default;
+    ~Character() override = default;
 
     void move(glm::vec2 delta) {
         m_WorldPosition += delta;
@@ -71,24 +63,54 @@ public:
         return m_CharacterType;
     }
 
-    void update(const float dt);
+    void setJumpHeight(float jumpHeight) {
+        m_JumpHeight = jumpHeight;
+    }
+
+    float getJumpHeight() const {
+        return m_JumpHeight;
+    }
+
+    void setPreviousPosition(const glm::vec2& previousPosition) {
+        m_PreviousPosition = previousPosition;
+    }
+
+    const glm::vec2& getPreviousPosition() const {
+        return m_PreviousPosition;
+    }
+
+    World::CollisionGeometry getCollisionGeometry() const override {
+        const glm::vec2 halfSize = m_WorldSize * 0.5f;
+
+        World::PolygonGeometry polygon;
+        polygon.vertices = {
+            m_WorldPosition + glm::vec2{-halfSize.x, -halfSize.y},
+            m_WorldPosition + glm::vec2{ halfSize.x, -halfSize.y},
+            m_WorldPosition + glm::vec2{ halfSize.x,  halfSize.y},
+            m_WorldPosition + glm::vec2{-halfSize.x,  halfSize.y}
+        };
+
+        return polygon;
+    }
+
+    void update(float dt);
 
 private:
     void handleInput();
-
     void applyPhysics(float dt);
 
 private:
     CharacterType m_CharacterType = CharacterType::CUBE;
 
     glm::vec2 m_Velocity = {0.0f, 0.0f};
+    glm::vec2 m_PreviousPosition = {0.0f, 0.0f};
     bool m_IsOnGround = false;
 
     float m_MoveSpeed = 10.66666f;
-    float m_Gravity = -80.0f;
-    float m_JumpSpeed = 18.0f;
-    float m_ShipLiftSpeed = 18.0f;
+    float m_Gravity = -82.0f;
 
+    float m_JumpHeight = 2.0f;
+    float m_ShipLiftSpeed = 18.0f;
 };
 
 #endif

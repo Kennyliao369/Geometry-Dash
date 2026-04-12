@@ -40,6 +40,11 @@ private:
     void renderWorld();
 
 private:
+    std::vector<std::shared_ptr<World::WorldObject>> getSolidCollisionCandidates(
+        const World::AABB& playerSweptAabb
+    ) const;
+
+private:
     // Util::Renderer m_UiRoot;
 
     LevelData m_LevelData;

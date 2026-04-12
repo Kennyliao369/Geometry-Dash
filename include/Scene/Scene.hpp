@@ -1,7 +1,13 @@
 #ifndef SCENE_HPP
 #define SCENE_HPP
 
-#include "Scene/SceneType.hpp"
+enum class SceneType {
+    None,
+    MainMenu,
+    Gameplay,
+    CharacterSelect,
+    LevelSelect
+};
 
 class Scene {
 public:

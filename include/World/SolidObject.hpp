@@ -10,18 +10,37 @@ enum class SolidType {
 
 class SolidObject : public World::WorldObject {
 public:
-    SolidObject(SolidType solidType) 
-        :   World::WorldObject(ObjectType::SOLID),
-            m_SolidType(solidType) {
-        
-
+    explicit SolidObject(SolidType solidType)
+        : World::WorldObject(ObjectType::SOLID),
+          m_SolidType(solidType) {
     }
 
-    virtual ~SolidObject() = default;
+    ~SolidObject() override = default;
+
+    SolidType getSolidType() const {
+        return m_SolidType;
+    }
 
 private:
     SolidType m_SolidType;
+};
 
+class BlockObject : public SolidObject {
+public:
+    BlockObject()
+        : SolidObject(SolidType::BLOCK) {
+    }
+
+    ~BlockObject() override = default;
+};
+
+class GroundObject : public SolidObject {
+public:
+    GroundObject()
+        : SolidObject(SolidType::GROUND) {
+    }
+
+    ~GroundObject() override = default;
 };
 
 #endif
