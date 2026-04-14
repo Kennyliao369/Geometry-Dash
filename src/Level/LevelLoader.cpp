@@ -45,6 +45,43 @@ namespace {
         };
     }
 
+    json parseParameterObject(const json& node) {
+        if (!node.contains("parameter")) {
+            return json::object();
+        }
+
+        if (!node.at("parameter").is_object()) {
+            throw std::runtime_error("parameter must be an object");
+        }
+
+        return node.at("parameter");
+    }
+
+    CharacterType parseCharacterTypeText(const std::string& text) {
+        if (text == "cube") {
+            return CharacterType::CUBE;
+        }
+        if (text == "ship") {
+            return CharacterType::SHIP;
+        }
+
+        throw std::runtime_error("unknown character type: " + text);
+    }
+
+    CharacterType parsePortalTargetCharacterType(const json& parameter) {
+        if (!parameter.contains("targetCharacterType")) {
+            return CharacterType::CUBE;
+        }
+
+        if (!parameter.at("targetCharacterType").is_string()) {
+            throw std::runtime_error("parameter.targetCharacterType must be a string");
+        }
+
+        return parseCharacterTypeText(
+            parameter.at("targetCharacterType").get<std::string>()
+        );
+    }
+
     void readMeta(LevelData& levelData, const json& root) {
         if (!root.contains("meta") || !root.at("meta").is_object()) {
             throw std::runtime_error("level json requires object field: meta");
@@ -64,7 +101,8 @@ namespace {
         const std::string& material,
         const glm::vec2& position,
         const glm::vec2& size,
-        const float rotation
+        const float rotation,
+        const json& parameter
     ) {
         std::shared_ptr<World::WorldObject> object;
 
@@ -99,10 +137,14 @@ namespace {
             );
         }
         else if (type == "portal") {
-            object = std::make_shared<PortalObject>();
-            object->SetDrawable(
+            auto portal = std::make_shared<PortalObject>();
+            portal->setTargetCharacterType(
+                parsePortalTargetCharacterType(parameter)
+            );
+            portal->SetDrawable(
                 std::make_shared<Util::Image>(RESOURCE_DIR "/Image/Trigger/" + material + ".png")
             );
+            object = portal;
         }
         else if (type == "pad") {
             object = std::make_shared<PadObject>();
@@ -141,6 +183,7 @@ namespace {
         const glm::vec2 size = parseVec2(objectJson, "size");
         const float rotation = objectJson.value("rotation", 0.0f);
         const int repeat = objectJson.value("repeat", 1);
+        const json parameter = parseParameterObject(objectJson);
 
         if (repeat <= 0) {
             throw std::runtime_error("repeat must be greater than 0");
@@ -154,7 +197,7 @@ namespace {
             repeatedPosition.x += size.x * static_cast<float>(i);
 
             objects.push_back(
-                createObject(type, material, repeatedPosition, size, rotation)
+                createObject(type, material, repeatedPosition, size, rotation, parameter)
             );
         }
 

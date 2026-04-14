@@ -63,6 +63,10 @@ public:
         return m_CharacterType;
     }
 
+    void setCharacterType(CharacterType characterType) {
+        m_CharacterType = characterType;
+    }
+
     void setJumpHeight(float jumpHeight) {
         m_JumpHeight = jumpHeight;
     }
@@ -96,8 +100,8 @@ public:
     void update(float dt);
 
 private:
-    void handleInput();
-    void applyPhysics(float dt);
+    void handleInput(const float dt);
+    void applyPhysics(const float dt);
 
 private:
     CharacterType m_CharacterType = CharacterType::CUBE;
@@ -109,7 +113,7 @@ private:
     float m_MoveSpeed = 10.66666f;
     float m_Gravity = -82.0f;
 
-    float m_JumpHeight = 2.0f;
+    float m_JumpHeight = 2.2f;
     float m_ShipLiftSpeed = 18.0f;
 };
 

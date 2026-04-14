@@ -2,6 +2,7 @@
 #define TRIGGEROBJECT_HPP
 
 #include "World/WorldObject.hpp"
+#include "World/Character.hpp"
 
 #include <algorithm>
 
@@ -28,13 +29,24 @@ private:
     TriggerType m_TriggerType;
 };
 
-class PortalObject : public TriggerObject {
+class PortalObject : public TriggerObject { // 放置重複觸發
 public:
     PortalObject()
         : TriggerObject(TriggerType::PORTAL) {
     }
 
     ~PortalObject() override = default;
+
+    CharacterType getTargetCharacterType() const {
+        return m_TargetCharacterType;
+    }
+
+    void setTargetCharacterType(const CharacterType targetCharacterType) {
+        m_TargetCharacterType = targetCharacterType;
+    }
+
+private:
+    CharacterType m_TargetCharacterType = CharacterType::CUBE;
 };
 
 class PadObject : public TriggerObject {

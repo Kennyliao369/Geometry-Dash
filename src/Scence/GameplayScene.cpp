@@ -2,6 +2,7 @@
 
 #include "Util/Logger.hpp"
 #include "World/Collision.hpp"
+#include "World/TriggerObject.hpp"
 
 namespace {
     enum class SolidHitType {
@@ -56,7 +57,7 @@ namespace {
         const World::AABB& objectAabb,
         const glm::vec2& stepDelta
     ) {
-        constexpr float kVerticalContactTolerance = 0.3f;
+        constexpr float kVerticalContactTolerance = 0.5f;
         constexpr float kMaxAcceptableSlopeDegrees = 45.0f;
         constexpr float kSeparationEpsilon = 0.0005f;
 
@@ -102,6 +103,43 @@ namespace {
             return false;
         }
     }
+
+    void applyPlayerCharacterType(const std::shared_ptr<Character>& player, const CharacterType newType) {
+        if (!player) {
+            return;
+        }
+
+        if (player->getCharacterType() == newType) {
+            return;
+        }
+
+        player->setCharacterType(newType);
+        player->setRotation(0.0f);
+
+        glm::vec2 newVelocity = player->getVelocity();
+        newVelocity.y = 0.0f;
+        player->setVelocity(newVelocity);
+        player->setOnGround(false);
+
+        switch (newType) {
+        case CharacterType::CUBE:
+            player->SetDrawable(
+                std::make_shared<Util::Image>(RESOURCE_DIR "/Image/Role/cube_00.png")
+            );
+            player->setSize(glm::vec2{1.0f, 1.0f});
+            break;
+
+        case CharacterType::SHIP:
+            player->SetDrawable(
+                std::make_shared<Util::Image>(RESOURCE_DIR "/Image/Role/ship_00.png")
+            );
+            player->setSize(glm::vec2{1.0f, 0.75f});
+            break;
+
+        default:
+            break;
+        }
+    }
 }
 
 GameplayScene::GameplayScene()
@@ -135,11 +173,9 @@ GameplayScene::GameplayScene()
 }
 
 void GameplayScene::update(const float dt) {
-    m_Player->update(dt);
-
     /// Debug mode !!!
-    /*
-    constexpr float moveSpeed = 20.0f;
+    
+    constexpr float moveSpeed = 60.0f;
     glm::vec2 position = m_Player->getPosition();
 
     if (Util::Input::IsKeyPressed(Util::Keycode::LEFT)) {
@@ -158,13 +194,16 @@ void GameplayScene::update(const float dt) {
     m_Player->setPosition(position);
     m_Player->setVelocity({0.0f, 0.0f});
     m_Player->setOnGround(false);
-    */
+    
     // Debug mode !!!
 
+    /*
+    m_Player->update(dt);
     resolveSolidCollisions(dt);
     checkHazardCollisions();
     checkTriggerOverlaps();
-    
+    */
+
     m_WorldRoot.updateFocus(dt);
     updateVisibleRange();
 
@@ -432,6 +471,21 @@ void GameplayScene::checkTriggerOverlaps() {
 
         if (!result.hit) {
             continue;
+        }
+        const auto triggerObject = std::dynamic_pointer_cast<TriggerObject>(object);
+        if (!triggerObject) {
+            continue;
+        }
+
+        if (triggerObject->getTriggerType() == TriggerType::PORTAL) {
+            const auto portalObject = std::dynamic_pointer_cast<PortalObject>(object);
+            if (!portalObject) {
+                continue;
+            }
+
+            applyPlayerCharacterType(m_Player, portalObject->getTargetCharacterType());
+            LOG_DEBUG("Player entered portal");
+            return;
         }
 
         LOG_DEBUG("Player overlapped trigger");
