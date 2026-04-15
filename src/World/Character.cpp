@@ -6,7 +6,7 @@
 #include <glm/trigonometric.hpp>
 
 namespace {
-    constexpr float kShipTurnSpeedDegreesPerSecond = 130.0f;
+    constexpr float kShipTurnSpeedDegreesPerSecond = 150.0f;
     constexpr float kShipMaxRotationDegrees = 45.0f;
 }
 

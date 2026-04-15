@@ -173,9 +173,14 @@ GameplayScene::GameplayScene()
 }
 
 void GameplayScene::update(const float dt) {
-    /// Debug mode !!!
     
-    constexpr float moveSpeed = 60.0f;
+    /// Debug mode !!!
+    if (Util::Input::IsKeyDown(Util::Keycode::F3)) {
+        LOG_DEBUG(m_Player->getPosition());
+    }
+
+    /*
+    constexpr float moveSpeed = 10.0f;
     glm::vec2 position = m_Player->getPosition();
 
     if (Util::Input::IsKeyPressed(Util::Keycode::LEFT)) {
@@ -190,19 +195,19 @@ void GameplayScene::update(const float dt) {
     if (Util::Input::IsKeyPressed(Util::Keycode::DOWN)) {
         position.y -= moveSpeed * dt;
     }
-
     m_Player->setPosition(position);
     m_Player->setVelocity({0.0f, 0.0f});
     m_Player->setOnGround(false);
-    
+    */
     // Debug mode !!!
 
-    /*
+    
     m_Player->update(dt);
     resolveSolidCollisions(dt);
     checkHazardCollisions();
     checkTriggerOverlaps();
-    */
+    
+    
 
     m_WorldRoot.updateFocus(dt);
     updateVisibleRange();

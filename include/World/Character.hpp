@@ -90,8 +90,8 @@ public:
         polygon.vertices = {
             m_WorldPosition + glm::vec2{-halfSize.x, -halfSize.y},
             m_WorldPosition + glm::vec2{ halfSize.x, -halfSize.y},
-            m_WorldPosition + glm::vec2{ halfSize.x,  halfSize.y},
-            m_WorldPosition + glm::vec2{-halfSize.x,  halfSize.y}
+            m_WorldPosition + glm::vec2{ halfSize.x,  0.0f}, // halfSize.y
+            m_WorldPosition + glm::vec2{-halfSize.x,  0.0f}  //halfSize.y
         };
 
         return polygon;
@@ -110,8 +110,8 @@ private:
     glm::vec2 m_PreviousPosition = {0.0f, 0.0f};
     bool m_IsOnGround = false;
 
-    float m_MoveSpeed = 10.66666f;
-    float m_Gravity = -82.0f;
+    float m_MoveSpeed = 10.3333333f;
+    float m_Gravity = -91.0f;
 
     float m_JumpHeight = 2.2f;
     float m_ShipLiftSpeed = 18.0f;
