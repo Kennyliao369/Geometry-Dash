@@ -1,0 +1,22 @@
+// got 500 and 670
+
+// ship won't dead with side
+
+// 碰撞邏輯還有問題
+
+  "meta": {
+    "playerSpawn": {
+      "x": -13.0,
+      "y": 0.0
+    },
+    "bgm": {
+      "path": "Audio/Bgm/Stereo Madness.mp3",
+      "volume": 96
+    },
+    "backgroundColor": {
+      "r": 35,
+      "g": 55,
+      "b": 255,
+      "a": 255
+    }
+  }

@@ -7,9 +7,10 @@
 #include <algorithm>
 
 enum class TriggerType {
-    PORTAL,
     PAD,
-    COIN
+    COIN,
+    PORTAL,
+    BACKGROUND_COLOR
 };
 
 class TriggerObject : public World::WorldObject {
@@ -25,8 +26,17 @@ public:
         return m_TriggerType;
     }
 
+    bool isTriggered() const {
+        return m_IsTriggered;
+    }
+
+    void setTriggered(const bool triggered) {
+        m_IsTriggered = triggered;
+    }
+
 private:
     TriggerType m_TriggerType;
+    bool m_IsTriggered = false;
 };
 
 class PortalObject : public TriggerObject { // 放置重複觸發
@@ -47,6 +57,23 @@ public:
 
 private:
     CharacterType m_TargetCharacterType = CharacterType::CUBE;
+};
+
+class BackgroundColorObject : public TriggerObject {
+public:
+    BackgroundColorObject()
+        : TriggerObject(TriggerType::BACKGROUND_COLOR) {
+    }
+
+    const Util::Color& getTargetColor() const { return m_TargetColor; }
+    void setTargetColor(const Util::Color& color) { m_TargetColor = color; }
+
+    float getDuration() const { return m_Duration; }
+    void setDuration(const float duration) { m_Duration = duration; }
+
+private:
+    Util::Color m_TargetColor = Util::Color::FromRGB(0, 0, 0);
+    float m_Duration = 0.0f;
 };
 
 class PadObject : public TriggerObject {

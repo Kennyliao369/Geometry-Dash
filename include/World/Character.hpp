@@ -102,6 +102,10 @@ public:
 private:
     void handleInput(const float dt);
     void applyPhysics(const float dt);
+    void updateAnimation(const float dt);
+
+    void snapCubeRotationToRightAngle();
+    static float normalizeDegrees(float degrees);
 
 private:
     CharacterType m_CharacterType = CharacterType::CUBE;
@@ -110,11 +114,13 @@ private:
     glm::vec2 m_PreviousPosition = {0.0f, 0.0f};
     bool m_IsOnGround = false;
 
-    float m_MoveSpeed = 10.3333333f;
-    float m_Gravity = -91.0f;
+    float m_MoveSpeed = 31.0f / 3.0f;
+    float m_Gravity = -85.0f;
 
     float m_JumpHeight = 2.2f;
     float m_ShipLiftSpeed = 18.0f;
+
+    float m_CubeAirRotationSpeed = -400.0f;
 };
 
 #endif

@@ -11,6 +11,7 @@ namespace {
         CEILING
     };
 
+    // tool
     World::AABB mergeAabbs(const World::AABB& a, const World::AABB& b) {
         World::AABB merged;
         merged.min = {
@@ -24,19 +25,12 @@ namespace {
         return merged;
     }
 
-    // 計算玩家與物件在垂直方向上的最小重疊深度。
-    // 數值越小，代表越接近「只是在上/下邊緣碰到」的情況。
-    float calculateVerticalOverlapDepth(
-        const World::AABB& playerAabb,
-        const World::AABB& objectAabb
-    ) {
+    float calculateVerticalOverlapDepth(const World::AABB& playerAabb, const World::AABB& objectAabb) {
         const float overlapToObjectTop = objectAabb.max.y - playerAabb.min.y;
         const float overlapToObjectBottom = playerAabb.max.y - objectAabb.min.y;
         return std::min(overlapToObjectTop, overlapToObjectBottom);
     }
 
-    // 由碰撞法線推算表面斜度：
-    // 0 度接近平地，90 度接近垂直牆面。
     float calculateSlopeDegrees(const glm::vec2& normal) {
         const float length = glm::length(normal);
         if (length <= 0.0001f) {
@@ -49,15 +43,13 @@ namespace {
         );
     }
 
-    // 先用上下最小重疊深度做容錯，再用法線斜度判斷這次碰撞
-    // 比較像上下接觸還是左右碰撞。
     SolidHitType classifySolidHit(
         const World::Collision::CollisionResult& collisionResult,
         const World::AABB& playerAabb,
         const World::AABB& objectAabb,
         const glm::vec2& stepDelta
     ) {
-        constexpr float kVerticalContactTolerance = 0.5f;
+        constexpr float kVerticalContactTolerance = 0.3f;
         constexpr float kMaxAcceptableSlopeDegrees = 45.0f;
         constexpr float kSeparationEpsilon = 0.0005f;
 
@@ -93,10 +85,18 @@ namespace {
     bool shouldDieFromSolidHit(CharacterType characterType, SolidHitType hitType) {
         switch (characterType) {
         case CharacterType::CUBE:
+            // !!!
+            if (hitType == SolidHitType::CEILING) LOG_DEBUG("CUDE CELING");
+            if (hitType == SolidHitType::SIDE) LOG_DEBUG("CUDE SIDE");
+
             return hitType == SolidHitType::SIDE ||
                    hitType == SolidHitType::CEILING;
 
         case CharacterType::SHIP:
+            // !!!
+            if (hitType == SolidHitType::CEILING) LOG_DEBUG("SHIP CELING");
+            if (hitType == SolidHitType::SIDE) LOG_DEBUG("SHIP SIDE");
+
             return hitType == SolidHitType::SIDE;
 
         default:
@@ -104,6 +104,7 @@ namespace {
         }
     }
 
+    // !!! need to move to character
     void applyPlayerCharacterType(const std::shared_ptr<Character>& player, const CharacterType newType) {
         if (!player) {
             return;
@@ -140,11 +141,47 @@ namespace {
             break;
         }
     }
+
+    int lerpColorChannel(const int current, const int target, const float t) {
+        return static_cast<int>(
+            std::round(
+                static_cast<float>(current) +
+                (static_cast<float>(target) - static_cast<float>(current)) * t
+            )
+        );
+    }
+
+    Util::Color lerpColor(const Util::Color& current, const Util::Color& target, const float t) {
+        Util::Color result = Util::Color::FromRGB(
+            lerpColorChannel(current.r, target.r, t),
+            lerpColorChannel(current.g, target.g, t),
+            lerpColorChannel(current.b, target.b, t)
+        );
+        result.a = lerpColorChannel(current.a, target.a, t);
+        return result;
+    }
+}
+
+// start
+void GameplayScene::startLevelBgm() {
+    if (m_LevelData.meta.bgm.path.empty()) {
+        LOG_DEBUG("This level has no BGM configured.");
+        return;
+    }
+
+    m_LevelBgm = std::make_unique<Util::BGM>(m_LevelData.meta.bgm.path);
+    m_LevelBgm->SetVolume(m_LevelData.meta.bgm.volume);
+    m_LevelBgm->Play();
+
+    LOG_DEBUG(
+        "Start level BGM: "
+        + m_LevelData.meta.bgm.path
+    );
 }
 
 GameplayScene::GameplayScene()
     : Scene(SceneType::Gameplay) {
-
+        
     m_WorldRoot.setViewConfig({1280.0f, 720.0f}, {16.0f, 12.0f});
 
     m_LevelData = LevelLoader::LoadFromFile(RESOURCE_DIR "/Level/level01.json");
@@ -163,22 +200,26 @@ GameplayScene::GameplayScene()
 
     m_BackgroundRoot.setScreenSize(m_WorldRoot.getScreenSize());
     m_BackgroundRoot.setCellSize(m_WorldRoot.getCellSize());
-    m_BackgroundRoot.setColor(Util::Color::FromRGB(58, 53, 254));
+    m_BackgroundRoot.setColor(m_LevelData.meta.backgroundColor);
 
-    // 單層背景
+    
     m_BackgroundRoot.setImage(
-    std::make_shared<Util::Image>(RESOURCE_DIR"/Image/Background/background.png"),
-    0.10f
-);
+        std::make_shared<Util::Image>(RESOURCE_DIR"/Image/Background/background.png"),
+        0.10f
+    );
+
+    startLevelBgm();
 }
 
+
+
 void GameplayScene::update(const float dt) {
-    
-    /// Debug mode !!!
+    // Developement
     if (Util::Input::IsKeyDown(Util::Keycode::F3)) {
         LOG_DEBUG(m_Player->getPosition());
     }
-
+    
+    /// Debug mode !!!
     /*
     constexpr float moveSpeed = 10.0f;
     glm::vec2 position = m_Player->getPosition();
@@ -203,17 +244,18 @@ void GameplayScene::update(const float dt) {
 
     
     m_Player->update(dt);
-    resolveSolidCollisions(dt);
-    checkHazardCollisions();
+    resolveSolidCollisions();
+    // checkHazardCollisions();
     checkTriggerOverlaps();
-    
-    
+    updateBackgroundColor(dt);
 
     m_WorldRoot.updateFocus(dt);
     updateVisibleRange();
 
     renderWorld();
 }
+
+
 
 std::vector<std::shared_ptr<World::WorldObject>> GameplayScene::getSolidCollisionCandidates(
     const World::AABB& playerSweptAabb
@@ -258,7 +300,7 @@ std::vector<std::shared_ptr<World::WorldObject>> GameplayScene::getSolidCollisio
 //                     其他 代表物體是垂直或水平：這時直接使用AABB看上下嵌入深度，朝向y軸速度的反向推出嵌入深度
 
 // 如何處理碰撞並矯正使用者位置後，矯正過的位置可能會有二次碰撞：可能需要拿新的位置做再次碰撞檢測
-void GameplayScene::resolveSolidCollisions(const float dt) {
+void GameplayScene::resolveSolidCollisions() {
     constexpr float kCollisionStepLength = 0.1f;
     constexpr float kSeparationEpsilon = 0.0005f;
 
@@ -407,7 +449,6 @@ void GameplayScene::resolveSolidCollisions(const float dt) {
     m_Player->setOnGround(groundedThisFrame);
 }
 
-
 void GameplayScene::checkHazardCollisions() {
     const World::AABB playerAabb = m_Player->getAABB();
     const World::CollisionGeometry playerGeometry = m_Player->getCollisionGeometry();
@@ -451,49 +492,72 @@ void GameplayScene::checkHazardCollisions() {
 void GameplayScene::checkTriggerOverlaps() {
     const World::AABB playerAabb = m_Player->getAABB();
     const World::CollisionGeometry playerGeometry = m_Player->getCollisionGeometry();
+    // 1. 先清掉玩家已經離開的 trigger
+    for (auto it = m_ActiveTriggers.begin(); it != m_ActiveTriggers.end();) {
+        const auto& triggerObject = *it;
+        if (!triggerObject) { it = m_ActiveTriggers.erase(it); continue; }
 
-    for (std::size_t i = static_cast<std::size_t>(m_VisibleRange.x);
-         i < static_cast<std::size_t>(m_VisibleRange.y);
-         ++i) {
+        if (!World::Collision::aabbVsAabb(playerAabb, triggerObject->getAABB())) {
+            triggerObject->setTriggered(false);
+            it = m_ActiveTriggers.erase(it);
+            continue;
+        }
+        if (!World::Collision::geometryVsGeometry(playerGeometry, triggerObject->getCollisionGeometry()).hit) {
+            triggerObject->setTriggered(false);
+            it = m_ActiveTriggers.erase(it);
+            continue;
+        }
+
+        ++it;
+    }
+
+    for (std::size_t i = static_cast<std::size_t>(m_VisibleRange.x); i < static_cast<std::size_t>(m_VisibleRange.y); ++i) {
         const auto& object = m_AllObjects[i];
+        if (!object) { continue; }
+        if (object->getType() != ObjectType::TRIGGER) { continue; }
+        if (!World::Collision::aabbVsAabb(playerAabb, object->getAABB())) { continue; }
+        if (!World::Collision::geometryVsGeometry(playerGeometry, object->getCollisionGeometry()).hit) { continue; }
 
-        if (!object) {
-            continue;
-        }
-
-        if (object->getType() != ObjectType::TRIGGER) {
-            continue;
-        }
-
-        if (!World::Collision::aabbVsAabb(playerAabb, object->getAABB())) {
-            continue;
-        }
-
-        const auto result = World::Collision::geometryVsGeometry(
-            playerGeometry,
-            object->getCollisionGeometry()
-        );
-
-        if (!result.hit) {
-            continue;
-        }
+        // 已經在這次接觸中觸發過，就不要再觸發
         const auto triggerObject = std::dynamic_pointer_cast<TriggerObject>(object);
-        if (!triggerObject) {
-            continue;
-        }
+        if (!triggerObject) { continue; }
+        if (triggerObject->isTriggered()) { continue; }
 
-        if (triggerObject->getTriggerType() == TriggerType::PORTAL) {
+        switch (triggerObject->getTriggerType()) {
+        case TriggerType::PORTAL: {
             const auto portalObject = std::dynamic_pointer_cast<PortalObject>(object);
-            if (!portalObject) {
-                continue;
-            }
+            if (!portalObject) { continue; }
 
             applyPlayerCharacterType(m_Player, portalObject->getTargetCharacterType());
+            
+            triggerObject->setTriggered(true);
             LOG_DEBUG("Player entered portal");
-            return;
+            break;
         }
+        case TriggerType::BACKGROUND_COLOR: {
+            const auto backgroundColorObject = std::dynamic_pointer_cast<BackgroundColorObject>(object);
+            if (!backgroundColorObject) { continue; }
 
-        LOG_DEBUG("Player overlapped trigger");
+            m_BackgroundTargetColor = backgroundColorObject->getTargetColor();
+            m_BackgroundDuration = std::max(0.0f, backgroundColorObject->getDuration());
+            if (m_BackgroundDuration <= 0.0f) {
+                m_BackgroundRoot.setColor(m_BackgroundTargetColor);
+            }
+
+            triggerObject->setTriggered(true);
+            LOG_DEBUG("Player triggered background color");
+            break;
+        }
+        default: {
+
+            triggerObject->setTriggered(true);
+            LOG_DEBUG("Player overlapped trigger");
+            break;
+        }
+        }
+        if (triggerObject->isTriggered()) {
+            m_ActiveTriggers.push_back(triggerObject);
+        }
     }
 }
 
@@ -534,7 +598,6 @@ void GameplayScene::updateVisibleRange() {
     );
 }
 
-
 void GameplayScene::renderWorld() {
     m_BackgroundRoot.update(m_WorldRoot.getFocusPosition());
 
@@ -546,5 +609,23 @@ void GameplayScene::renderWorld() {
     m_WorldRoot.update();
 }
 
+void GameplayScene::updateBackgroundColor(const float dt) {
+    if (m_BackgroundDuration <= 0.0f) {
+        return;
+    }
 
+    const Util::Color currentColor = m_BackgroundRoot.getColor();
+
+    if (dt >= m_BackgroundDuration) {
+        m_BackgroundRoot.setColor(m_BackgroundTargetColor);
+        m_BackgroundDuration = 0.0f;
+        return;
+    }
+
+    const float stepRatio = dt / m_BackgroundDuration;
+    const Util::Color nextColor = lerpColor(currentColor, m_BackgroundTargetColor, stepRatio);
+
+    m_BackgroundRoot.setColor(nextColor);
+    m_BackgroundDuration -= dt;
+}
 // 碰撞範圍 與 顯示範圍 可能要分開

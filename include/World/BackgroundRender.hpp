@@ -19,6 +19,7 @@ public:
     void setCellSize(float cellSize);
 
     void setColor(const Util::Color& color);
+    Util::Color getColor() const { return m_BackgroundColor; }
 
     void setImage(const std::shared_ptr<Util::Image>& image, float parallaxFactor = 0.0f);
     void addImage(const std::shared_ptr<Util::Image>& image, float parallaxFactor);

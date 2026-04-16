@@ -8,6 +8,27 @@
 namespace {
     constexpr float kShipTurnSpeedDegreesPerSecond = 150.0f;
     constexpr float kShipMaxRotationDegrees = 45.0f;
+
+    constexpr float kRightAngleDegrees = 90.0f;
+    constexpr float kFullRotationDegrees = 360.0f;
+    constexpr float kRotationAlignmentEpsilon = 0.001f;
+}
+
+float Character::normalizeDegrees(float degrees) {
+    degrees = std::fmod(degrees, kFullRotationDegrees);
+
+    if (degrees < 0.0f) {
+        degrees += kFullRotationDegrees;
+    }
+
+    return degrees;
+}
+
+void Character::snapCubeRotationToRightAngle() {
+    const float snappedRotation =
+        std::round(getRotation() / kRightAngleDegrees) * kRightAngleDegrees;
+
+    setRotation(normalizeDegrees(snappedRotation));
 }
 
 void Character::update(const float dt) {
@@ -15,6 +36,7 @@ void Character::update(const float dt) {
 
     handleInput(dt);
     applyPhysics(dt);
+    updateAnimation(dt);
     m_WorldPosition += m_Velocity * dt;
 }
 
@@ -54,6 +76,28 @@ void Character::handleInput(const float dt) {
         m_IsOnGround = false;
         break;
     }
+
+    default:
+        break;
+    }
+}
+
+void Character::updateAnimation(const float dt) {
+    switch (m_CharacterType) {
+    case CharacterType::CUBE: {
+        if (m_IsOnGround) {
+            snapCubeRotationToRightAngle();
+            return;
+        }
+
+        setRotation(normalizeDegrees(getRotation() + m_CubeAirRotationSpeed * dt));
+            break;
+        }
+
+    case CharacterType::SHIP:
+        // 目前 ship 的 rotation 同時參與移動方向計算，
+        // 所以仍然保留在 handleInput()。
+        break;
 
     default:
         break;

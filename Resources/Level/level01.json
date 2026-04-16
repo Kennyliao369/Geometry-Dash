@@ -2,11 +2,11 @@
   "objects": [
     { 
       "type": "ground",
-      "position": { "x": -3.5, "y": -2.5 },
+      "position": { "x": -11.5, "y": -2.5 },
       "size": { "x": 4.0, "y": 4.0 },
       "rotation": 0.0,
       "material": "ground_fill",
-      "repeat": 222
+      "repeat": 229
     },
 
     { 
@@ -3941,6 +3941,111 @@
       "rotation": 90.0,
       "material": "block_grid_01",
       "repeat": 1
+    },
+
+    
+
+    {
+      "type": "backgroundColor",
+      "position": { "x": 9.0, "y": 4.5 },
+      "size": { "x": 1.0, "y": 10.0 },
+      "rotation": 0.0,
+      "material": "pink",
+      "repeat": 1,
+      "parameter": {
+        "targetColor": {
+          "r": 145,
+          "g": 3,
+          "b": 255,
+          "a": 255
+        },
+        "duration": 9.0
+      }
+    },
+    {
+      "type": "backgroundColor",
+      "position": { "x": 239.0, "y": 5 },
+      "size": { "x": 1.0, "y": 3.0 },
+      "rotation": 0.0,
+      "material": "pink",
+      "repeat": 1,
+      "parameter": {
+        "targetColor": {
+          "r": 0,
+          "g": 0,
+          "b": 0,
+          "a": 255
+        },
+        "duration": 1.71
+      }
+    },
+    {
+      "type": "backgroundColor",
+      "position": { "x": 258.0, "y": 5 },
+      "size": { "x": 1.0, "y": 3.0 },
+      "rotation": 0.0,
+      "material": "pink",
+      "repeat": 1,
+      "parameter": {
+        "targetColor": {
+          "r": 255,
+          "g": 13,
+          "b": 102,
+          "a": 255
+        },
+        "duration": 0.38
+      }
+    },
+    {
+      "type": "backgroundColor",
+      "position": { "x": 410.0, "y": 4.5 },
+      "size": { "x": 1.0, "y": 4.0 },
+      "rotation": 0.0,
+      "material": "pink",
+      "repeat": 1,
+      "parameter": {
+        "targetColor": {
+          "r": 145,
+          "g": 3,
+          "b": 255,
+          "a": 255
+        },
+        "duration": 0.56
+      }
+    },
+    {
+      "type": "backgroundColor",
+      "position": { "x": 503.0, "y": 4.5 },
+      "size": { "x": 1.0, "y": 10.0 },
+      "rotation": 0.0,
+      "material": "pink",
+      "repeat": 1,
+      "parameter": {
+        "targetColor": {
+          "r": 238,
+          "g": 0,
+          "b": 33,
+          "a": 255
+        },
+        "duration": 0.44
+      }
+    },
+    {
+      "type": "backgroundColor",
+      "position": { "x": 755.0, "y": 4.5 },
+      "size": { "x": 1.0, "y": 4.0 },
+      "rotation": 0.0,
+      "material": "pink",
+      "repeat": 1,
+      "parameter": {
+        "targetColor": {
+          "r": 255,
+          "g": 0,
+          "b": 195,
+          "a": 255
+        },
+        "duration": 0.57
+      }
     }
 
 
@@ -3948,34 +4053,7 @@
 
 
 
-    
 
-
-    
-
-
-
-    
-
-
-
-
-
-
-
-
-
-    
-
-
-    
-
-
-
-
-
-    
-    
 
 
 
@@ -3984,8 +4062,18 @@
   ],
   "meta": {
     "playerSpawn": {
-      "x": 0.0,
+      "x": -13.0,
       "y": 0.0
+    },
+    "bgm": {
+      "path": "Audio/Bgm/Stereo Madness.mp3",
+      "volume": 96
+    },
+    "backgroundColor": {
+      "r": 35,
+      "g": 55,
+      "b": 255,
+      "a": 255
     }
   }
 }

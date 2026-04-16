@@ -49,7 +49,7 @@ void BackgroundRender::clearImages() {
 }
 
 float BackgroundRender::normalizeColorComponent(const float value) {
-    return value > 1.0f ? value / 255.0f : value;
+    return std::clamp(value, 0.0f, 255.0f) / 255.0f;
 }
 
 float BackgroundRender::positiveModulo(const float value, const float divisor) {

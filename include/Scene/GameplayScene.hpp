@@ -10,6 +10,9 @@
 #include "World/Character.hpp"
 
 #include "World/BackgroundRender.hpp"
+#include "World/TriggerObject.hpp"
+#include "Util/BGM.hpp"
+
 /*
 #include "World/HazardObject.hpp"
 #include "World/DecorationObject.hpp"
@@ -24,25 +27,29 @@
 class GameplayScene : public Scene {
 public:
     GameplayScene();
-
     virtual ~GameplayScene() = default;
 
     void update(const float dt) override;
 
 private:
+
     void updatePlayerPhysics(float dt);
-    
-    void resolveSolidCollisions(const float dt);
+    void resolveSolidCollisions();
     void checkHazardCollisions();
     void checkTriggerOverlaps();
-
+    
     void updateVisibleRange();
     void renderWorld();
+    void startLevelBgm();
+
+    void updateBackgroundColor(const float dt);
+    
 
 private:
     std::vector<std::shared_ptr<World::WorldObject>> getSolidCollisionCandidates(
         const World::AABB& playerSweptAabb
     ) const;
+
 
 private:
     // Util::Renderer m_UiRoot;
@@ -50,6 +57,7 @@ private:
     LevelData m_LevelData;
     World::WorldRender m_WorldRoot;
     World::BackgroundRender m_BackgroundRoot;
+    std::unique_ptr<Util::BGM> m_LevelBgm;
 
     std::shared_ptr<Character> m_Player;
     std::vector<std::shared_ptr<World::WorldObject>> m_AllObjects;
@@ -57,7 +65,10 @@ private:
     glm::vec2 m_VisibleRange = {0.0f, 0.0f};
     glm::vec2 m_VisiblePadding = {4.0f, 4.0f};
     
-    
+    std::vector<std::shared_ptr<TriggerObject>> m_ActiveTriggers;
+
+    Util::Color m_BackgroundTargetColor;
+    float m_BackgroundDuration = 0.0f;
     /*
     std::vector<std::shared_ptr<SolidObject>> m_Solids;
     std::vector<std::shared_ptr<HazardObject>> m_Hazards;
